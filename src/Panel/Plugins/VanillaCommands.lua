@@ -1,6 +1,5 @@
 local module = {}
 local Settings = require(script.Parent.Parent.Settings)
-local Players = game:GetService("Players")
 local Replicated = game:GetService("ReplicatedStorage")
 
 module.Kick = function(_, Targets, Arguments)
@@ -23,15 +22,11 @@ module.Unban = function(Executor, Targets)
 end
 
 module.RemoveTool = function(Executor, Targets, Arguments)
-  if Executor.Backpack:FindFirstChild(Arguments[1]) then
-    Executor.Backpack[Arguments[1]]:Destroy()
-  else
-    for _, Player in pairs(Targets) do
-      if typeof(Player) ~= "Player" then continue end
+  if not Arguments then return end
 
-      local Tool = Player.Backpack:FindFirstChild()
-      if Tool then Tool:Destroy() end
-    end
+  for _, Player in pairs(Targets) do
+    if typeof(Player) ~= "Player" then continue end
+    if Player.Backpack:FindFirstChild(Arguments[1] or "") then Player.Backpack[Arguments[1]]:Destroy() end
   end
 end
 
@@ -54,19 +49,23 @@ module.Bring = function(Executor, Targets)
 
 end
 
-module.Team = function(Executor, Targets)
+module.Team = function(Executor, Targets, Arguments)
+  if not Arguments then return end
+  if not type(Arguments[1]) == "string" then return end
+  local Team = game:GetService("Teams"):FindFirstChild(Arguments[1])
 
+  if not Team then return end
+
+  for _, Player in pairs(Targets) do
+    if typeof(Player) == "Player" then continue end
+    Player.Team = Team
+  end
 end
 
 module.Give = function(Executor, Targets, Arguments)
-  local Tool = Replicated:FindFirstChild(Arguments[1])
+  local Tool = Replicated:FindFirstChild(Arguments[1] or "")
 
-  if not Tool then
-    Tool = Replicated:FindFirstChild(Targets[1])
-    if Tool then
-      Tool:Clone().Parent = Executor.Backpack
-    end
-  else
+  if Tool then
     for _, Player in pairs(Targets) do
       if typeof(Player) ~= "Player" then continue end
 
