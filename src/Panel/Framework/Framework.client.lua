@@ -1,6 +1,8 @@
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
+-- local Player = Players.LocalPlayer
+local GUI = script.Parent.Parent
 local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
+local LocalCommands = require(script.Parent.LocalCommands)
 
 local UIS = game:GetService("UserInputService")
 local Panel = script.Parent.Parent
@@ -8,6 +10,13 @@ local Panel = script.Parent.Parent
 local CTRL_Down = false
 local PlayersSelected = {}
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
+
+local function RunCommand(Command, Arguments)
+  Command = string.lower(Command)
+  if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
+
+  print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
+end
 
 local function RefreshPlayerList()
   local Order = 0
@@ -116,5 +125,13 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
   end
 end)
+
+for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
+  if not Button:IsA("TextButton") then continue end
+
+  Button.MouseButton1Up:Connect(function()
+    RunCommand(Button.Name)
+  end)
+end
 
 RefreshPlayerList()

@@ -4,9 +4,8 @@ local Players = game:GetService("Players")
 local Replicated = game:GetService("ReplicatedStorage")
 
 module.Kick = function(_, Targets, Arguments)
-  for _, PlayerName in pairs(Targets) do
-    local Player = Players:FindFirstChild(PlayerName)
-    if not Player then continue end
+  for _, Player in pairs(Targets) do
+    if typeof(Player) ~= "Player" then continue end
 
     Player:Kick(Arguments[1] or "You have been kicked by a moderator.")
   end
@@ -16,34 +15,19 @@ module.Ban = function(Executor, Targets)
   if not Settings.Administrators[Executor.UserId] then return "You must be an administrator to execute this command." end
   local UserId
   local Target = Targets[1]
-
-  if type(Target) == "string" then
-    UserId = game.Players:GetUserIdFromNameAsync(Target)
-  else
-    return "Unknown type given for Target."
-  end
-
-
 end
 
 module.Unban = function(Executor, Targets)
   if not Settings.Administrators[Executor.UserId] then return "You must be an administrator to execute this command." end
   local User = Targets[1]
-
-  if type(User) == "string" then
-
-  elseif type(User) == "number" then
-
-  end
 end
 
 module.RemoveTool = function(Executor, Targets, Arguments)
   if Executor.Backpack:FindFirstChild(Arguments[1]) then
     Executor.Backpack[Arguments[1]]:Destroy()
   else
-    for _, PlayerName in pairs(Targets) do
-      local Player = Players:FindFirstChild(PlayerName)
-      if not Player then continue end
+    for _, Player in pairs(Targets) do
+      if typeof(Player) ~= "Player" then continue end
 
       local Tool = Player.Backpack:FindFirstChild()
       if Tool then Tool:Destroy() end
@@ -52,17 +36,16 @@ module.RemoveTool = function(Executor, Targets, Arguments)
 end
 
 module.Respawn = function(_, Targets)
-  for _, PlayerName in pairs(Targets) do
-    local Player = Players:FindFirstChild(PlayerName)
-    if not Player then continue end
+  for _, Player in pairs(Targets) do
+    if typeof(Player) ~= "Player" then continue end
 
     Player:LoadCharacter()
   end
 end
 
 module.GoTo = function(Executor, Targets)
-  local Player = game:GetService("Players"):FindFirstChild(Targets[1])
-  if not Player then return "Target is not a valid player." end
+  local Player = Targets[1]
+  if typeof(Player) ~= "Player" then return "Target is not a valid player." end
 
   Executor.Character:PivotTo(Player.Character:GetPivot() * CFrame.new(0, 0, -3))
 end
@@ -84,9 +67,8 @@ module.Give = function(Executor, Targets, Arguments)
       Tool:Clone().Parent = Executor.Backpack
     end
   else
-    for _, PlayerName in pairs(Targets) do
-      local Player = Players:FindFirstChild(PlayerName)
-      if not Player then continue end
+    for _, Player in pairs(Targets) do
+      if typeof(Player) ~= "Player" then continue end
 
       Tool:Clone().Parent = Player.Backpack
     end
@@ -94,9 +76,8 @@ module.Give = function(Executor, Targets, Arguments)
 end
 
 module.Freeze = function(_, Targets)
-  for _, PlayerName in pairs(Targets) do
-    local Player = Players:FindFirstChild(PlayerName)
-    if not Player then continue end
+  for _, Player in pairs(Targets) do
+    if typeof(Player) ~= "Player" then continue end
     if not Player.Character then continue end
     if not Player.Character:FindFirstChild("HumanoidRootPart") then continue end
 

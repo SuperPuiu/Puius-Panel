@@ -10,7 +10,10 @@ local function GivePanel(Player)
 
   for _, v in pairs(script.Framework:GetChildren()) do
     v.Parent = Panel.Framework
-    v.Enabled = true
+  end
+
+  for _, v in pairs(Panel.Framework:GetChildren()) do
+    if not v:IsA("ModuleScript") then v.Enabled = true end
   end
 
   Panel.Parent = Player.PlayerGui
@@ -35,15 +38,16 @@ local function Main()
   end
 
   Event.OnServerInvoke = function(Player, Data)
-    if not Permissions.Administrators[Player.UserId] or Permissions.Moderators then return "User is not authorized to call the remote function." end
+    if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
     if not Data then return "No data passed." end
 
     local Command = Data.Command
-    local Target = Data.Target
+    local Targets = Data.Targets
     local Arguments = Data.Arguments
 
-    if type(Command) ~= "string" or type(Target) ~= "table" or type(Arguments) ~= "table" then return "Unknown data types given." end
-    return Plugins[Command](Player, Target, Arguments) or `Executed {Command} command!`
+    if not Arguments then Arguments = {} end
+    if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
+    return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
   end
 
   game:GetService("Players").PlayerAdded:Connect(function(Player)
