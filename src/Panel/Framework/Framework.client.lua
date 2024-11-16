@@ -10,14 +10,6 @@ local CTRL_Down = false
 local PlayersSelected = {}
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
 
-local function RunCommand(Command, Arguments)
-  Command = string.lower(Command)
-  if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
-
-  print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
-  PlayersSelected = {}
-end
-
 local function RefreshPlayerList()
   local Order = 0
 
@@ -55,7 +47,6 @@ local function RefreshPlayerList()
     end)
 
     Template.Visible = true
-    Order = Order + 1
   end
 
   for _, v in pairs(Players:GetPlayers()) do
@@ -66,17 +57,34 @@ local function RefreshPlayerList()
 
   for _, Team in pairs(game:GetService("Teams"):GetTeams()) do
     Order = Order + 1
-    local TeamTemplate = Panel.MainFrame.PlayerFrame.TextLabel:Clone()
+    local TeamTemplate
+
+    if not Panel.MainFrame.PlayerFrame:FindFirstChild(Team.Name) then
+      TeamTemplate = Panel.MainFrame.PlayerFrame.TextLabel:Clone()
+    else
+      TeamTemplate = Panel.MainFrame.PlayerFrame[Team.Name]
+    end
+
     TeamTemplate.Text = Team.Name
     TeamTemplate.Name = Team.Name
     TeamTemplate.Parent = Panel.MainFrame.PlayerFrame
     TeamTemplate.BackgroundColor3 = Team.TeamColor.Color
     TeamTemplate.Visible = true
+    TeamTemplate.LayoutOrder = Order
 
     for _, v in pairs(Team:GetPlayers()) do
       CreatePlayerButton(v)
     end
   end
+end
+
+local function RunCommand(Command, Arguments)
+  Command = string.lower(Command)
+  if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
+
+  print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
+  PlayersSelected = {}
+  RefreshPlayerList()
 end
 
 Panel.PanelButton.MouseButton1Up:Connect(function()

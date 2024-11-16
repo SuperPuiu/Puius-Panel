@@ -1,6 +1,7 @@
 local module = {}
 local Panel = game.Players.LocalPlayer.PlayerGui:WaitForChild("PanelUI")
 local ArgumentsFrame = Panel.MainFrame.Arguments
+local Watching = false
 
 local function GetArgument(Folder, AllowedType)
   local i = 0
@@ -42,7 +43,13 @@ module.team = function()
 end
 
 module.watch = function(Targets)
+  if Watching then
+    workspace.CurrentCamera.CameraSubject = Targets[1].Character.Humanoid
+  else
+    workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+  end
 
+  Watching = not Watching
 end
 
 module.give = function()
@@ -50,7 +57,7 @@ module.give = function()
 end
 
 module.inventory = function(Targets)
-  
+
 end
 
 module.removetool = function(Targets)
