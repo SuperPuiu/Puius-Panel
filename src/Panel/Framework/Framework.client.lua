@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
--- local Player = Players.LocalPlayer
 local GUI = script.Parent.Parent
 local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
 local LocalCommands = require(script.Parent.LocalCommands)
@@ -16,6 +15,7 @@ local function RunCommand(Command, Arguments)
   if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
 
   print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
+  PlayersSelected = {}
 end
 
 local function RefreshPlayerList()
