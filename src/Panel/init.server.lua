@@ -38,16 +38,20 @@ local function Main()
   end
 
   Event.OnServerInvoke = function(Player, Data)
-    if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
-    if not Data then return "No data passed." end
+    local Status, AdditionalResponse = pcall(function()
+      if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
+      if not Data then return "No data passed." end
 
-    local Command = Data.Command
-    local Targets = Data.Targets
-    local Arguments = Data.Arguments
+      local Command = Data.Command
+      local Targets = Data.Targets
+      local Arguments = Data.Arguments
 
-    if not Arguments then Arguments = {} end
-    if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
-    return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
+      if not Arguments then Arguments = {} end
+      if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
+      return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
+    end)
+
+    return AdditionalResponse or Status
   end
 
   game:GetService("Players").PlayerAdded:Connect(function(Player)
