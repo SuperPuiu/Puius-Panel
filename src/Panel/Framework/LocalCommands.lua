@@ -3,6 +3,11 @@ local Panel = game.Players.LocalPlayer.PlayerGui:WaitForChild("PanelUI")
 local ArgumentsFrame = Panel.MainFrame.Arguments
 local Watching = false
 
+local function GetArgumentsEx(...)
+  -- TODO
+  local TypesNeeded = {...}
+end
+
 local function GetArgument(Folder, AllowedType)
   local i = 0
   local Argument
