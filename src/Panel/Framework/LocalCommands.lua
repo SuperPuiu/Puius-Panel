@@ -50,6 +50,7 @@ module.watch = function(Targets)
   end
 
   Watching = not Watching
+  return false
 end
 
 module.give = function()
@@ -57,7 +58,7 @@ module.give = function()
 end
 
 module.inventory = function(Targets)
-
+  return false
 end
 
 module.removetool = function(Targets)

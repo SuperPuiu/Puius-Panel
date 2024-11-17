@@ -13,45 +13,45 @@ local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = U
 local function RefreshPlayerList()
   local Order = 0
 
-  local function CreatePlayerButton(v)
+  local function CreatePlayerButton(Player)
     local Template
-    if Panel.MainFrame.PlayerFrame:FindFirstChild(v.Name) then
-      Template = Panel.MainFrame.PlayerFrame[v.Name]
+    if Panel.MainFrame.PlayerFrame:FindFirstChild(Player.Name) then
+      Template = Panel.MainFrame.PlayerFrame[Player.Name]
     else
       Template = Panel.MainFrame.PlayerFrame.TextButton:Clone()
-      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(v.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size60x60)
+      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size60x60)
     end
 
     Template.Parent = Panel.MainFrame.PlayerFrame
-    Template.Name = v.Name
+    Template.Name = Player.Name
     Template.LayoutOrder = Order
 
     if DisplayInformation == 0 then
-      Template.TextLabel.Text = string.format("%s\n<font color='#5a8a29'>(%s)</font>", v.DisplayName, v.Name)
+      Template.TextLabel.Text = string.format("%s\n<font color='#5a8a29'>(%s)</font>", Player.DisplayName, Player.Name)
     elseif DisplayInformation == 1 then
-      Template.TextLabel.Text = string.format("%s\n<font color='#5a8a29'>(%i)</font>", v.Name, v.UserId)
+      Template.TextLabel.Text = string.format("%s\n<font color='#5a8a29'>(%i)</font>", Player.Name, Player.UserId)
     elseif DisplayInformation == 2 then
-      Template.TextLabel.Text = v.Name
+      Template.TextLabel.Text = Player.Name
     end
 
-    v.Destroying:Connect(function()
+    Player.Destroying:Connect(function()
       Template:Destroy()
     end)
 
     Template.MouseButton1Up:Connect(function()
       if CTRL_Down then
-        if not table.find(PlayersSelected, v) then table.insert(PlayersSelected, v) end
+        if not table.find(PlayersSelected, Player) then table.insert(PlayersSelected, Player) end
       else
-        PlayersSelected = {v}
+        PlayersSelected = {Player}
       end
     end)
 
     Template.Visible = true
   end
 
-  for _, v in pairs(Players:GetPlayers()) do
-    if v.Team == nil then
-      CreatePlayerButton(v)
+  for _, Player in pairs(Players:GetPlayers()) do
+    if Player.Team == nil then
+      CreatePlayerButton(Player)
     end
   end
 
@@ -72,8 +72,8 @@ local function RefreshPlayerList()
     TeamTemplate.Visible = true
     TeamTemplate.LayoutOrder = Order
 
-    for _, v in pairs(Team:GetPlayers()) do
-      CreatePlayerButton(v)
+    for _, Player in pairs(Team:GetPlayers()) do
+      CreatePlayerButton(Player)
     end
   end
 end
@@ -81,6 +81,7 @@ end
 local function RunCommand(Command, Arguments)
   Command = string.lower(Command)
   if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
+  if Arguments == false then return end -- Hacky way to stop the panel from continuing to run a command. Useful for local commands.
 
   print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
   PlayersSelected = {}
