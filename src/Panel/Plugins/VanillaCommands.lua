@@ -19,15 +19,41 @@ module.Kick = function(_, Targets, Arguments)
   end
 end
 
-module.Ban = function(Executor, Targets)
+module.Ban = function(Executor, Targets, Arguments)
+  -- Supports only single-target to prevent possible abuse.
+  if game.PrivateServerId ~= nil and game.PrivateServerOwnerId ~= 0 then return "Unable to run BAN within a private server." end
   if not Settings.Administrators[Executor.UserId] then return "You must be an administrator to execute this command." end
-  local UserId
-  local Target = Targets[1]
+
+  local Target = NextPlayer(Targets, 1)
+  if not Target then return "Invalid target passed to BAN command." end
+
+  local BanConfiguration = {
+    UserIds = {Target.UserId},
+    Duration = -1, -- Infinite ban.
+    DisplayReason = Arguments[1] or "",
+    PrivateReason = Arguments[2] or "",
+    ExcludeAltAccounts = Arguments[3] or true,
+    ApplyToUniverse = true
+  }
+
+  game:GetService("Players"):BanAsync(BanConfiguration)
+  Target:Kick("You have been banned.")
 end
 
 module.Unban = function(Executor, Targets)
+  -- Supports only single-target to prevent possible abuse.
+  if game.PrivateServerId ~= nil and game.PrivateServerOwnerId ~= 0 then return "Unable to run UNBAN within a private server." end
   if not Settings.Administrators[Executor.UserId] then return "You must be an administrator to execute this command." end
-  local User = Targets[1]
+
+  local Target = Targets[1]
+  if tonumber(Target) == nil then return "Invalid target passed to UNBAN command." end
+
+  local UnbanConfig = {
+    UserIds = {Target},
+    ApplyToUniverse = true,
+  }
+
+  game:GetService("Players"):UnbanAsync(UnbanConfig)
 end
 
 module.RemoveTool = function(_, Targets, Arguments)
@@ -44,7 +70,7 @@ end
 module.Respawn = function(_, Targets)
   for i = 1, #Targets do
     local Player = NextPlayer(Targets, i)
-    
+
     if Player then Player:LoadCharacter() end
   end
 end
@@ -58,7 +84,10 @@ module.GoTo = function(Executor, Targets)
 end
 
 module.Bring = function(Executor, Targets)
-
+  for i = 1, #Targets do
+    local Player = NextPlayer(Targets, i)
+    if Player then Player.Character:PivotTo(Executor.Character:GetPivot() * CFrame.new(0, 0, -3)) end
+  end
 end
 
 module.Team = function(_, Targets, Arguments)
@@ -80,7 +109,7 @@ module.Give = function(_, Targets, Arguments)
   if Tool then
     for i = 1, #Targets do
       local Player = NextPlayer(Targets, i)
-      
+
       if Player then Tool:Clone().Parent = Player.Backpack end
     end
   end
