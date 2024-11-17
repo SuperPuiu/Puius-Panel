@@ -1,14 +1,26 @@
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
 local GUI = script.Parent.Parent
 local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
 local LocalCommands = require(script.Parent.LocalCommands)
 
-local UIS = game:GetService("UserInputService")
 local Panel = script.Parent.Parent
+local SettingsContainer = Panel.Settings.ScrollingFrame
 
 local CTRL_Down = false
 local PlayersSelected = {}
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
+
+local function HandleBoolSetting(Name)
+  if Panel:GetAttribute(Name) then
+    SettingsContainer[Name].State.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+  else
+    SettingsContainer[Name].State.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+  end
+
+  Panel:SetAttribute(Name, not Panel:GetAttribute(Name))
+end
 
 local function RefreshPlayerList()
   local Order = 0
@@ -135,6 +147,19 @@ game:GetService("RunService").RenderStepped:Connect(function()
   end
 end)
 
+SettingsContainer.OutputOnExecution.State.MouseButton1Up:Connect(function()
+  HandleBoolSetting("OutputOnExecution")
+end)
+
+SettingsContainer.TerminalVisibility.State.MouseButton1Up:Connect(function()
+  HandleBoolSetting("TerminalVisibility")
+  Panel.MainFrame.Terminal.Visible = Panel:GetAttribute("TerminalVisibility")
+end)
+
+SettingsContainer.ResizingEnabled.State.MouseButton1Up:Connect(function()
+  HandleBoolSetting("ResizingEnabled")
+end)
+
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
   if not Button:IsA("TextButton") then continue end
 
@@ -143,4 +168,6 @@ for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
   end)
 end
 
+Panel:SetAttribute("ResizingEnabled", true)
+Panel:SetAttribute("OutputOnExecution", true)
 RefreshPlayerList()
