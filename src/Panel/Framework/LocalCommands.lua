@@ -60,7 +60,7 @@ module.watch = function(Targets)
 end
 
 module.give = function()
-  return GetArgument(game:GetService("ReplicatedStorage"):GetDescendants(), "Team")
+  return GetArgument(game:GetService("ReplicatedStorage"):GetDescendants(), "Tool")
 end
 
 module.inventory = function(Targets)
