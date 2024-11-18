@@ -37,7 +37,8 @@ local function GetArgument(Folder, AllowedType)
   if i == 0 then return end
   ArgumentsFrame.Visible = true
 
-  ArgumentsFrame.CanvasSize = UDim2.new(0, ArgumentsFrame.UIListLayout.AbsoluteContentSize.X, 0, ArgumentsFrame.UIListLayout.AbsoluteContentSize.Y)
+  ArgumentsFrame.CanvasSize = UDim2.new(0, ArgumentsFrame.UIListLayout.AbsoluteContentSize.X,
+    0, ArgumentsFrame.UIListLayout.AbsoluteContentSize.Y)
   repeat task.wait() until ArgumentsFrame.Visible == false or Argument
 
   return Argument
