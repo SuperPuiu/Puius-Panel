@@ -2,6 +2,7 @@ local Event
 
 local Settings = require(script.Settings)
 local Permissions = {}
+local PluginsName = {}
 local Plugins = {}
 
 local function GivePanel(Player)
@@ -31,27 +32,36 @@ local function Main()
 
   for _, Plugin in pairs(script.Plugins:GetChildren()) do
     local Commands = require(Plugin)
+    PluginsName[Plugin.Name] = {}
+    PluginsName[Plugin.Name]["Name"] = Commands.Name
 
     for Command, Attached in pairs(Commands) do
+      if Command == "Name" or Command == "RequireExArguments" or Command == "Descriptions" then continue end
+
       Plugins[string.lower(Command)] = Attached
+      PluginsName[Plugin.Name][Command] = Command
     end
   end
 
   Event.OnServerInvoke = function(Player, Data)
-    local Status, AdditionalResponse = pcall(function()
-      if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
-      if not Data then return "No data passed." end
+    if Data.Type == "RequestPlugins" then
+      return PluginsName
+    else
+      local Status, AdditionalResponse = pcall(function()
+        if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
+        if not Data then return "No data passed." end
 
-      local Command = Data.Command
-      local Targets = Data.Targets
-      local Arguments = Data.Arguments
+        local Command = Data.Command
+        local Targets = Data.Targets
+        local Arguments = Data.Arguments
 
-      if not Arguments then Arguments = {} end
-      if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
-      return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
-    end)
+        if not Arguments then Arguments = {} end
+        if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
+        return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
+      end)
 
-    return AdditionalResponse or Status
+      return AdditionalResponse or Status
+    end
   end
 
   game:GetService("Players").PlayerAdded:Connect(function(Player)

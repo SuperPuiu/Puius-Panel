@@ -197,10 +197,11 @@ for Name, PluginTable in pairs(PluginsName) do
 
   local Template = Panel.MainFrame.Commands.Template:Clone()
   Template.Name = Name
-  Template.TextLabel.Text = Name or PluginTable.Name
+  Template.TextLabel.Text = PluginTable.Name or Name
   Template.Parent = Panel.MainFrame.Commands
 
-  for _, Plugin in pairs(PluginTable) do
+  for P_Name, Plugin in pairs(PluginTable) do
+    if P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments" then continue end
     local ButtonTemplate = Template.ScrollingFrame.Template:Clone()
     ButtonTemplate.Name = Plugin
     ButtonTemplate.Text = Plugin
