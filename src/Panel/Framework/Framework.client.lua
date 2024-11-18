@@ -7,9 +7,11 @@ local LocalCommands = require(script.Parent.LocalCommands)
 
 local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
+local PlayerList = Panel.MainFrame.PlayerFrame
 
 local CTRL_Down = false
 local PlayersSelected = {}
+local PluginsName = Server:InvokeServer({Type = "RequestPlugins"})
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
 
 local function HandleBoolSetting(Name)
@@ -26,11 +28,10 @@ local function RefreshPlayerList()
   local Order = 0
 
   local function CreatePlayerButton(Player)
-    local Template
-    if Panel.MainFrame.PlayerFrame:FindFirstChild(Player.Name) then
-      Template = Panel.MainFrame.PlayerFrame[Player.Name]
-    else
-      Template = Panel.MainFrame.PlayerFrame.TextButton:Clone()
+    local Template = Panel.MainFrame.PlayerFrame:FindFirstChild(Player.Name)
+
+    if not Template then
+      Template = PlayerList.TextButton:Clone()
       Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId, 
         Enum.ThumbnailType.HeadShot,
         Enum.ThumbnailSize.Size60x60)
@@ -48,7 +49,7 @@ local function RefreshPlayerList()
       end)
     end
 
-    Template.Parent = Panel.MainFrame.PlayerFrame
+    Template.Parent = PlayerList
     Template.Name = Player.Name
     Template.LayoutOrder = Order
 
@@ -89,6 +90,9 @@ local function RefreshPlayerList()
       CreatePlayerButton(Player)
     end
   end
+
+  PlayerList.CanvasSize = UDim2.new(0, PlayerList.UIListLayout.AbsoluteContentSize.X,
+    0, PlayerList.UIListLayout.AbsoluteContentSize.Y)
 end
 
 local function RunCommand(Command, Arguments)
@@ -183,6 +187,31 @@ end)
 SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.MouseButton1Up:Connect(function()
   ChangeDisplayInfo(2, SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.Text)
 end)
+
+for Name, PluginTable in pairs(PluginsName) do
+  if Name == "VanillaCommands" then continue end
+  if Panel.MainFrame.Commands:FindFirstChild(Name) then
+    warn("[PANEL]: Category already exists. Continuing with other plugins.")
+    continue
+  end
+
+  local Template = Panel.MainFrame.Commands.Template:Clone()
+  Template.Name = Name
+  Template.TextLabel.Text = Name
+  Template.Parent = Panel.MainFrame.Commands
+
+  for _, Plugin in pairs(PluginTable) do
+    local ButtonTemplate = Template.ScrollingFrame.Template:Clone()
+    ButtonTemplate.Name = Plugin
+    ButtonTemplate.Text = Plugin
+    ButtonTemplate.Parent = Template.ScrollingFrame
+    ButtonTemplate.Visible = true
+  end
+
+  Template.ScrollingFrame.CanvasSize = UDim2.new(0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.X,
+    0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.Y)
+  Template.Visible = true
+end
 
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
   if not Button:IsA("TextButton") then continue end

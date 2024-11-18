@@ -11,6 +11,21 @@ local function NextPlayer(List, Index)
   return NewItem
 end
 
+-- Metadata
+module.Name = "Vanilla Commands" -- This gives the category name when generating the buttons. Not adding it will result in the usage of the module's name.
+module.Descriptions = {
+  ["Kick"] = "kick <player> <message>", -- Use the same name which you used to implement the functionality of the said command.
+  ["Ban"] = "ban <player> <message>",
+  ["Unban"] = "unban <userid>",
+  ["Team"] = "team <player> <team>",
+  ["Give"] = "give <player> <tool>",
+  ["RemoveTool"] = "removetool <player> <tool>"
+  -- TODO: Finish descriptions.
+} -- This allows help command to display information. When a command is not found within it, default text will be shown.
+module.RequireExArguments = {} -- This allows the implementation of extended arguments. TODO.
+
+-- Commands
+
 module.Kick = function(_, Targets, Arguments)
   for i = 1, #Targets do
     local Player = NextPlayer(Targets, i)
