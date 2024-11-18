@@ -31,7 +31,21 @@ local function RefreshPlayerList()
       Template = Panel.MainFrame.PlayerFrame[Player.Name]
     else
       Template = Panel.MainFrame.PlayerFrame.TextButton:Clone()
-      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size60x60)
+      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId, 
+        Enum.ThumbnailType.HeadShot,
+        Enum.ThumbnailSize.Size60x60)
+
+      Player.Destroying:Connect(function()
+        Template:Destroy()
+      end)
+
+      Template.MouseButton1Up:Connect(function()
+        if CTRL_Down then
+          if not table.find(PlayersSelected, Player) then table.insert(PlayersSelected, Player) end
+        else
+          PlayersSelected = {Player}
+        end
+      end)
     end
 
     Template.Parent = Panel.MainFrame.PlayerFrame
@@ -45,19 +59,6 @@ local function RefreshPlayerList()
     elseif DisplayInformation == 2 then
       Template.TextLabel.Text = Player.Name
     end
-
-    Player.Destroying:Connect(function()
-      Template:Destroy()
-    end)
-
-    Template.MouseButton1Up:Connect(function()
-      if CTRL_Down then
-        if not table.find(PlayersSelected, Player) then table.insert(PlayersSelected, Player) end
-      else
-        PlayersSelected = {Player}
-      end
-    end)
-
     Template.Visible = true
   end
 
@@ -100,6 +101,13 @@ local function RunCommand(Command, Arguments)
   RefreshPlayerList()
 end
 
+local function ChangeDisplayInfo(Number, Str)
+  SettingsContainer.PlayerButtonNaming.ScrollingFrame.Visible = false
+  SettingsContainer.PlayerButtonNaming.State.Text = Str
+  DisplayInformation = Number
+  RefreshPlayerList()
+end
+
 Panel.PanelButton.MouseButton1Up:Connect(function()
   Panel.MainFrame.Visible = not Panel.MainFrame.Visible
   Panel.Settings.Visible = false
@@ -131,7 +139,7 @@ UIS.InputEnded:Connect(function(Input)
   end
 end)
 
-game:GetService("RunService").RenderStepped:Connect(function()
+game:GetService("RunService").Stepped:Connect(function()
   for _, v in pairs(Panel.MainFrame.PlayerFrame:GetChildren()) do
     if not v:IsA("TextButton") or v.Name == "TextButton" then continue end
 
@@ -158,6 +166,22 @@ end)
 
 SettingsContainer.ResizingEnabled.State.MouseButton1Up:Connect(function()
   HandleBoolSetting("ResizingEnabled")
+end)
+
+SettingsContainer.PlayerButtonNaming.State.MouseButton1Up:Connect(function()
+  SettingsContainer.PlayerButtonNaming.ScrollingFrame.Visible = true
+end)
+
+SettingsContainer.PlayerButtonNaming.ScrollingFrame.DisplayUser.MouseButton1Up:Connect(function()
+  ChangeDisplayInfo(0, SettingsContainer.PlayerButtonNaming.ScrollingFrame.DisplayUser.Text)
+end)
+
+SettingsContainer.PlayerButtonNaming.ScrollingFrame.IDUser.MouseButton1Up:Connect(function()
+  ChangeDisplayInfo(1, SettingsContainer.PlayerButtonNaming.ScrollingFrame.IDUser.Text)
+end)
+
+SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.MouseButton1Up:Connect(function()
+  ChangeDisplayInfo(2, SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.Text)
 end)
 
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
