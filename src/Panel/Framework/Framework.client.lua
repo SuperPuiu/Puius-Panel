@@ -197,7 +197,7 @@ for Name, PluginTable in pairs(PluginsName) do
 
   local Template = Panel.MainFrame.Commands.Template:Clone()
   Template.Name = Name
-  Template.TextLabel.Text = Name
+  Template.TextLabel.Text = Name or PluginTable.Name
   Template.Parent = Panel.MainFrame.Commands
 
   for _, Plugin in pairs(PluginTable) do
