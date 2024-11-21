@@ -20,6 +20,13 @@ local function GivePanel(Player)
   Panel.Parent = Player.PlayerGui
 end
 
+local function Update()
+  local Plugins = script.Plugins
+  Plugins.Parent = game:GetService("ServerStorage")
+
+  script.Disabled = true
+end
+
 local function Main()
   if not game:GetService("ReplicatedStorage"):FindFirstChild("PanelRemote") then
     Event = Instance.new("RemoteFunction")
@@ -30,7 +37,7 @@ local function Main()
   Permissions.Administrators = Settings.Administrators
   Permissions.Moderators = Settings.Moderators
 
-  for _, Plugin in pairs(script.Plugins:GetChildren()) do
+  for _, Plugin in pairs(script.Plugins.Server:GetChildren()) do
     local Commands = require(Plugin)
     PluginsName[Plugin.Name] = {}
     PluginsName[Plugin.Name]["Name"] = Commands.Name
@@ -77,4 +84,5 @@ local function Main()
   end
 end
 
+Update()
 Main()
