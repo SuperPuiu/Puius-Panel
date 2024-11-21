@@ -14,6 +14,7 @@ module.Moderators = {
 module.AutoUpdate = {
   ["LocalCommands"] = true,
   ["VanillaCommands"] = true,
+  ["Enabled"] = true
 }
 
 return module

