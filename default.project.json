@@ -1,0 +1,11 @@
+{
+  "name": "PuiusPanel",
+  "tree": {
+    "$className": "DataModel",
+
+    "ServerScriptService": {
+      "$path": "src",
+      "$className": "ServerScriptService"
+    }
+  }
+}
