@@ -1,9 +1,11 @@
 local Event
 
-local Settings = require(script.Settings)
+local Settings    = require(script.Settings)
 local Permissions = {}
 local PluginsName = {}
-local Plugins = {}
+local Plugins     = {}
+
+local InsertService = game:GetService("InsertService")
 
 local function GivePanel(Player)
   if Player.PlayerGui:FindFirstChild("PanelUI") then return end
@@ -20,13 +22,13 @@ local function GivePanel(Player)
   Panel.Parent = Player.PlayerGui
 end
 
-local function Update()
+--[[local function Update()
   local Plugins = script.Plugins
   Plugins.Parent = game:GetService("ServerStorage")
   require(15596180205)(Settings.AutoUpdate, script)
 
   script.Disabled = true
-end
+end]]
 
 local function Main()
   if not game:GetService("ReplicatedStorage"):FindFirstChild("PanelRemote") then
@@ -85,5 +87,4 @@ local function Main()
   end
 end
 
-Update()
 Main()

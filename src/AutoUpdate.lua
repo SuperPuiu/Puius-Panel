@@ -1,13 +1,17 @@
+local InsertService = game:GetService("InsertService")
+
 return function(AutoUpdate, Existing)
-  if Existing:GetAttribute("Updated") then return end
+  if not AutoUpdate.Enabled then return end
+  local AssetVersion = InsertService:GetLatestAssetVersionAsync(6460917354)
+
+  if Existing:GetAttribute("ModelVersion", AssetVersion) then return end
   if not Existing or not AutoUpdate then error("You must call auto updater with both parameters.") end
 
-  local Panel = script:WaitForChild("Panel")
+  local Panel = InsertService:LoadAssetVersion(AssetVersion)
   local OldPlugins = Existing:FindFirstChild("Plugins")
   if not OldPlugins then warn("Couldn't find Plugins folder.") return end
 
-  if not AutoUpdate.Enabled then return end
-  Panel:SetAttribute("Updated", true)
+  Panel:SetAttribute("ModelVersion", AssetVersion)
 
   if not AutoUpdate.VanillaCommands then
     local VanillaCommands = OldPlugins.Server.VanillaCommands
