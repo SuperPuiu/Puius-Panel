@@ -9,11 +9,15 @@ local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
 local PlayerList = Panel.MainFrame.PlayerFrame
 
-local CTRL_Down = false
+local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
 local PluginsName = Server:InvokeServer({Type = "RequestPlugins"})
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
 
+--[[
+-- HandleBoolSetting(Name) accepts Name string as an argument and aims to centralize Bool related settings. Name **must** exist 
+-- within SettingsContainer, else it will throw an error.
+--]]
 local function HandleBoolSetting(Name)
   if Panel:GetAttribute(Name) then
     SettingsContainer[Name].State.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
@@ -24,15 +28,23 @@ local function HandleBoolSetting(Name)
   Panel:SetAttribute(Name, not Panel:GetAttribute(Name))
 end
 
+--[[
+-- RefreshPlayerList() can be called freely whenever the `PlayerList` ScrollingFrame has to be updated. Normally it's called
+-- whenever a new player joins or a command is fired, after PlayersSelected table is cleared.
+--]]
 local function RefreshPlayerList()
   local Order = 0
-
+  --[[
+  -- CreatePlayerButton(Player) accepts a Player instance as argument and based on it and based on the provided settings it creates
+  -- a new button or updates an existing button within PlayerList ScrollingFrame. Order variable has to be manually updated.
+  --]]
   local function CreatePlayerButton(Player)
     local Template = Panel.MainFrame.PlayerFrame:FindFirstChild(Player.Name)
 
     if not Template then
+      -- If there isn't any existing button, simply create a new one with the template found within PlayerList and update its elements.
       Template = PlayerList.TextButton:Clone()
-      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId, 
+      Template.Headshot.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId,
         Enum.ThumbnailType.HeadShot,
         Enum.ThumbnailSize.Size60x60)
 
@@ -41,18 +53,26 @@ local function RefreshPlayerList()
       end)
 
       Template.MouseButton1Up:Connect(function()
+        -- Holding down CTRL allows you to select multiple players at once. This aims to allow you do so.
         if CTRL_Down then
-          if not table.find(PlayersSelected, Player) then table.insert(PlayersSelected, Player) end
+          if not table.find(PlayersSelected, Player) then
+            table.insert(PlayersSelected, Player)
+          else
+            for i, v in pairs(PlayersSelected) do
+              if v == Player then table.remove(PlayersSelected, i) end
+            end
+          end
         else
           PlayersSelected = {Player}
         end
       end)
     end
-
+    
     Template.Parent = PlayerList
     Template.Name = Player.Name
-    Template.LayoutOrder = Order
+    Template.LayoutOrder = Order -- Order is modified outside the function.
 
+    -- As stated above, DisplayInformation can be one of the 3 values: 1 (DisplayName and Name), 2 (Name and UserId) and 3 (Name)
     if DisplayInformation == 0 then
       Template.TextLabel.Text = string.format("%s\n<font color='#5a8a29'>(%s)</font>", Player.DisplayName, Player.Name)
     elseif DisplayInformation == 1 then
@@ -63,20 +83,21 @@ local function RefreshPlayerList()
     Template.Visible = true
   end
 
+  -- Considering that there may be players which aren't in a team, they should appear on top of other teams.
   for _, Player in pairs(Players:GetPlayers()) do
     if Player.Team == nil then
+      Order = Order + 1
       CreatePlayerButton(Player)
     end
   end
 
+  -- The following loop aims to create (or update, somehow) existing Team TextLabels and add Players under their respective team.
   for _, Team in pairs(game:GetService("Teams"):GetTeams()) do
     Order = Order + 1
-    local TeamTemplate
+    local TeamTemplate = Panel.MainFrame.PlayerFrame:FindFirstChild(Team.Name)
 
-    if not Panel.MainFrame.PlayerFrame:FindFirstChild(Team.Name) then
+    if not TeamTemplate then
       TeamTemplate = Panel.MainFrame.PlayerFrame.TextLabel:Clone()
-    else
-      TeamTemplate = Panel.MainFrame.PlayerFrame[Team.Name]
     end
 
     TeamTemplate.Text = Team.Name
@@ -91,10 +112,15 @@ local function RefreshPlayerList()
     end
   end
 
+  -- In the end, update the PlayerList CanvasSize based on information given by the UIListLayout
   PlayerList.CanvasSize = UDim2.new(0, PlayerList.UIListLayout.AbsoluteContentSize.X,
     0, PlayerList.UIListLayout.AbsoluteContentSize.Y)
 end
 
+--[[
+-- RunCommand(Command, Arguments) accepts Command string and Arguments table, and it is the function which handles preparing
+-- and invoking the RemoteFunction to execute the command (or in some cases, run the command only locally).
+--]]
 local function RunCommand(Command, Arguments)
   Command = string.lower(Command)
   if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
@@ -105,6 +131,10 @@ local function RunCommand(Command, Arguments)
   RefreshPlayerList()
 end
 
+--[[
+-- ChangeDisplayInfo(Number, Str) accepts Number number and Str string as arguments, and based on it modifies DisplayInformation
+-- and SettingsContainer.PlayerButtonNaming ScrollingFrame.
+--]]
 local function ChangeDisplayInfo(Number, Str)
   SettingsContainer.PlayerButtonNaming.ScrollingFrame.Visible = false
   SettingsContainer.PlayerButtonNaming.State.Text = Str
