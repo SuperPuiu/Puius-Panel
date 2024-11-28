@@ -1,5 +1,5 @@
 # Puius Panel
-Puius Panel is a lightweight panel which can be easily extended to support more than the "vanilla" commands provided
+Puius Panel is a lightweight panel which can be easily extended to support more than the "vanilla" commands provided,
 by making use of the "Plugins" feature it supports. 
 
 # Panel Deployment

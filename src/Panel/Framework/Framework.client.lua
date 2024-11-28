@@ -67,7 +67,7 @@ local function RefreshPlayerList()
         end
       end)
     end
-    
+
     Template.Parent = PlayerList
     Template.Name = Player.Name
     Template.LayoutOrder = Order -- Order is modified outside the function.
