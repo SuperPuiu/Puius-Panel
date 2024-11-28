@@ -5,7 +5,7 @@ local Replicated = game:GetService("ReplicatedStorage")
 local function NextPlayer(List, Index)
   local NewItem = List[Index]
 
-  if typeof(NewItem) == "Instance" then return end
+  if typeof(NewItem) ~= "Instance" then return end
   if not NewItem:IsA("Player") then return end
 
   return NewItem
