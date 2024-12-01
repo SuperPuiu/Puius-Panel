@@ -3,7 +3,7 @@ local UIS = game:GetService("UserInputService")
 
 local GUI = script.Parent.Parent
 local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
-local LocalCommands = require(script.Parent.LocalCommands)
+local LocalCommands = require(script.Parent.Client.VanillaCommands)
 
 local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame

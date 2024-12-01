@@ -9,25 +9,19 @@ local Logs        = {}
 local function GivePanel(Player)
   if Player.PlayerGui:FindFirstChild("PanelUI") then return end
   local Panel = script.PanelUI:Clone()
+  local ClientCommands = script.Plugins.Client:Clone()
+  ClientCommands.Parent = Panel.Framework
 
   for _, v in pairs(script.Framework:GetChildren()) do
-    v.Parent = Panel.Framework
+    v:Clone().Parent = Panel.Framework
   end
 
   for _, v in pairs(Panel.Framework:GetChildren()) do
-    if not v:IsA("ModuleScript") then v.Enabled = true end
+    if v:IsA("LocalScript") then v.Enabled = true end
   end
 
   Panel.Parent = Player.PlayerGui
 end
-
---[[local function Update()
-  local Plugins = script.Plugins
-  Plugins.Parent = game:GetService("ServerStorage")
-  require(15596180205)(Settings.AutoUpdate, script)
-
-  script.Disabled = true
-end]]
 
 local function Main()
   if not game:GetService("ReplicatedStorage"):FindFirstChild("PanelRemote") then
