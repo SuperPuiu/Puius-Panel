@@ -8,11 +8,36 @@ local LocalCommands = require(script.Parent.Client.VanillaCommands)
 local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
 local PlayerList = Panel.MainFrame.PlayerFrame
+local Terminal = Panel.MainFrame.Terminal
 
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
-local PluginsName = Server:InvokeServer({Type = "RequestPlugins"})
+local PluginsName = Server:InvokeServer({Type = "RequestPlugins"}) -- {PluginName = {Name = Name}}
 local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = User only
+
+--[[
+-- CompleteName(Location, Name) accepts Location table and Name string as arguments. The function compares strlen(Name) characters of
+-- every Location element with Name in an attempt to find the string which is asked for. Always returns a table.
+--]]
+local function CompleteName(Location, Name)
+  local ForReturn = {}
+
+  local len = string.len(Name)
+
+  for Key, Value in pairs(Location) do
+    local ForComparison = Key
+
+    if not tostring(ForComparison) then ForComparison = Value end
+
+    local sub = string.sub(ForComparison, 1, len)
+
+    if sub == Name then
+      table.insert(ForReturn)
+    end
+  end
+
+  return ForReturn
+end
 
 --[[
 -- HandleBoolSetting(Name) accepts Name string as an argument and aims to centralize Bool related settings. Name **must** exist 
@@ -164,6 +189,23 @@ UIS.InputBegan:Connect(function(Input, Processed)
     Panel.Settings.Visible = false
   elseif Input.KeyCode == Enum.KeyCode.LeftControl then
     CTRL_Down = true
+  elseif Input.KeyCode == Enum.KeyCode.Tab and Terminal.CommandLine.TextBox:IsFocused() then
+    --[[
+    -- Allow tab completion for commands / player names. This means that you can press TAB and the script will auto complete the
+    -- command / player name for you. Arguments aren't supported due to obvious reasons.
+    --]]
+    local Data = Terminal.CommandLine.TextBox.Text:split(" ")
+
+    if #Data == 1 then
+      -- Completion for command name
+      local Command
+      for _, PluginTable in pairs(PluginsName) do
+
+      end
+      local Completion = CompleteName()
+    elseif #Data == 2 then
+      -- Completion for Player name
+    end
   end
 end)
 
@@ -173,6 +215,7 @@ UIS.InputEnded:Connect(function(Input)
   end
 end)
 
+-- This loop here wastes resources and the functionality should be reimplemented -@SuperPuiu
 game:GetService("RunService").Stepped:Connect(function()
   for _, v in pairs(Panel.MainFrame.PlayerFrame:GetChildren()) do
     if not v:IsA("TextButton") or v.Name == "TextButton" then continue end
@@ -218,6 +261,11 @@ SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.MouseButton1Up:Connect(
   ChangeDisplayInfo(2, SettingsContainer.PlayerButtonNaming.ScrollingFrame.User.Text)
 end)
 
+Terminal.CommandLine.TextBox.FocusLost:Connect(function()
+  local Text = Terminal.CommandLine.TextBox.Text
+
+end)
+
 for Name, PluginTable in pairs(PluginsName) do
   if Name == "VanillaCommands" then continue end
   if Panel.MainFrame.Commands:FindFirstChild(Name) then
@@ -231,6 +279,7 @@ for Name, PluginTable in pairs(PluginsName) do
   Template.Parent = Panel.MainFrame.Commands
 
   for P_Name, Plugin in pairs(PluginTable) do
+    -- Ignore plugin metadata
     if P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments" then continue end
     local ButtonTemplate = Template.ScrollingFrame.Template:Clone()
     ButtonTemplate.Name = Plugin
@@ -241,7 +290,11 @@ for Name, PluginTable in pairs(PluginsName) do
 
   Template.ScrollingFrame.CanvasSize = UDim2.new(0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.X,
     0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.Y)
+
   Template.Visible = true
+
+  Panel.MainFrame.Commands.CanvasSize = UDim2.new(0, Panel.MainFrame.Commands.UIListLayout.AbsoluteContentSize.X,
+    0, Panel.MainFrame.Commands.UIListLayout.AbsoluteContentSize.Y)
 end
 
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
