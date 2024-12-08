@@ -1,6 +1,6 @@
 local module = {}
 local Panel = game.Players.LocalPlayer.PlayerGui:WaitForChild("PanelUI")
-local Shared = require(Panel.Framework.Shared) -- Exposed functions for stuff such as arguments
+local Shared = require(Panel.Framework.Shared) -- Shared functions
 local Watching = false
 
 module.team = function()

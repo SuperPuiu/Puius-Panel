@@ -1,14 +1,39 @@
+--[[
+-- Shared module must not have global variables which are specific to the graphical / non graphical environment.
+--]]
+
 local module = {}
+local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
+local LocalCommands = {}
+local PluginsName = {}
 
-local Panel = game.Players.LocalPlayer.PlayerGui:WaitForChild("PanelUI")
-local ArgumentsFrame = Panel.MainFrame.Arguments
+--[[
+-- RunCommand(Command, Arguments) accepts Command string and Arguments table, and it is the function which handles preparing
+-- and invoking the RemoteFunction to execute the command (or in some cases, run the command only locally). Cleanup is done manually.
+--]]
+module.RunCommand = function(Command, PlayersSelected, Arguments)
+  Command = string.lower(Command)
+  if not Arguments and LocalCommands[Command] then Arguments = LocalCommands[Command](PlayersSelected) end
+  if Arguments == false then return end -- Hacky way to stop the panel from continuing to run a command. Useful for local commands.
 
+  print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
+end
+--[[
+-- Unimplemented.
+--]]
 module.GetArgumentsEx = function(...)
   -- TODO
   local TypesNeeded = {...}
 end
 
+--[[
+-- GetArgument(Folder, AllowedType) accepts Folder Instance and AllowedType string as arguments and serves as basic input functionality
+-- for additional arguments. If more arguments are needed, GetArgumentsEx(...) should be called.
+--]]
 module.GetArgument = function(Folder, AllowedType)
+  local Panel = game.Players.LocalPlayer.PlayerGui:WaitForChild("PanelUI")
+  local ArgumentsFrame = Panel.MainFrame.Arguments
+
   local i = 0
   local Argument
 
@@ -42,6 +67,20 @@ module.GetArgument = function(Folder, AllowedType)
   repeat task.wait() until ArgumentsFrame.Visible == false or Argument
 
   return Argument
+end
+
+--[[
+-- GetPluginsName() is a shared function whose scope is to centralize requests for PluginsName.
+--]]
+module.GetPluginsName = function()
+  LocalCommands = require(script.Parent:WaitForChild("Client").VanillaCommands)
+  PluginsName = Server:InvokeServer({Type = "RequestPlugins"})
+  PluginsName["LocalCommands"] = {}
+
+  for P_Name, _ in pairs(LocalCommands) do
+    PluginsName["LocalCommands"][P_Name] = P_Name
+  end
+  return PluginsName
 end
 
 return module
