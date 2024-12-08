@@ -22,20 +22,21 @@ local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = U
 -- every Location element with Name in an attempt to find the string which is asked for. Always returns a table.
 --]]
 local function CompleteName(Location, Name)
-  print(Name)
   local ForReturn = {}
 
   local len = string.len(Name)
+  Name = string.lower(Name)
 
   for Key, Value in pairs(Location) do
     local ForComparison = Key
 
-    if not tostring(ForComparison) then ForComparison = Value end
+    if type(ForComparison) == "number" then ForComparison = Value end
+    if typeof(ForComparison) == "Instance" then ForComparison = ForComparison.Name end
 
-    local sub = string.sub(ForComparison, 1, len)
+    local sub = string.lower(string.sub(ForComparison, 1, len))
 
     if sub == Name then
-      table.insert(ForReturn)
+      table.insert(ForReturn, ForComparison)
     end
   end
 
@@ -91,7 +92,7 @@ local function RefreshPlayerList()
             end
           end
         else
-          PlayersSelected = {Player}
+          PlayersSelected = {[1] = Player}
         end
       end)
     end
@@ -208,7 +209,7 @@ end
 Panel.PanelButton.MouseButton1Up:Connect(function()
   HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
   if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
-  if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
+  if Panel.Settings.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
 end)
 
 Panel.MainFrame.Title.ImageButton.MouseButton1Up:Connect(function()
@@ -224,7 +225,7 @@ UIS.InputBegan:Connect(function(Input, Processed)
   if Input.KeyCode == Enum.KeyCode.Equals and not Processed then
     HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
     if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
-    if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
+    if Panel.Settings.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
   elseif Input.KeyCode == Enum.KeyCode.LeftControl and not Processed then
     CTRL_Down = true
   elseif Input.KeyCode == Enum.KeyCode.Tab and Terminal.CommandLine.TextBox:IsFocused() then
@@ -238,8 +239,16 @@ UIS.InputBegan:Connect(function(Input, Processed)
       -- Completion for command name
       local Command = {}
       for _, PluginTable in pairs(PluginsName) do
-
+        for _, Name in pairs(CompleteName(PluginTable, Data[1])) do
+          table.insert(Command, Name)
+        end
       end
+
+      if Command[1] == nil then Panel.Assets.Quack:Play() return end
+
+      game:GetService("RunService").RenderStepped:Wait()
+      Terminal.CommandLine.TextBox.Text = Command[1]
+      Terminal.CommandLine.TextBox.CursorPosition = string.len(Command[1]) + 1
       -- local Completion = CompleteName()
     elseif #Data == 2 then
       -- Completion for Player name
@@ -247,9 +256,14 @@ UIS.InputBegan:Connect(function(Input, Processed)
       if PlayersFound[1] == nil then Panel.Assets.Quack:Play() return end
 
       game:GetService("RunService").RenderStepped:Wait()
-      Terminal.CommandLine.TextBox.Text = Data[1].." "..PlayerName[1]
+      Terminal.CommandLine.TextBox.Text = Data[1].." "..PlayersFound[1]
       Terminal.CommandLine.TextBox.CursorPosition = string.len(Terminal.CommandLine.TextBox.Text) + 1
     end
+
+  elseif Input.KeyCode == Enum.KeyCode.Up then
+
+  elseif Input.KeyCode == Enum.KeyCode.Down then
+
   end
 end)
 
@@ -307,8 +321,21 @@ end)
 
 Terminal.CommandLine.TextBox.FocusLost:Connect(function()
   local Text = Terminal.CommandLine.TextBox.Text
-  local Data = Text:split(" ")
+  if #string.gsub(Text, "[%s]", "") == 0 then return end -- Empty string 
 
+  local Data = Text:split(" ")
+  local Label = Terminal.Template:Clone()
+  Label.Name = "OldCommand"
+  Label.TextBox.Text = Text
+  Label.TextLabel.Text = Terminal.CommandLine.TextLabel.Text
+  Label.Parent = Terminal
+  Label.Visible = true
+
+  Terminal.CommandLine.TextBox.Text = ""
+
+  if not Data[2] then return end
+  table.insert(PlayersSelected, game.Players:FindFirstChild(Data[2]))
+  RunCommand(Data[1], Data[3])
 end)
 
 for Name, PluginTable in pairs(PluginsName) do
