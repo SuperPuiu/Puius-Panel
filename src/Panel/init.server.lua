@@ -46,6 +46,8 @@ local function Main()
     end
   end
 
+  script.PanelUI:SetAttribute("AlwaysOnTop", true)
+
   Event.OnServerInvoke = function(Player, Data)
     if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
 

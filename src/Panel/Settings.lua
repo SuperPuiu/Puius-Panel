@@ -11,6 +11,11 @@ module.Moderators = {
   [0] = true,
 }
 
+module.Panel = {
+  ["AlwaysOnTop"] = true, -- Set DisplayOrder +1 from the highest DisplayOrder StarterGui
+  ["TerminalAlwaysOnTop"] = true,
+}
+
 -- Not implemented until further notice
 module.AutoUpdate = {
   ["LocalCommands"] = true,

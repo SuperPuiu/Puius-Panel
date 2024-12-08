@@ -1,14 +1,16 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local GUI = script.Parent.Parent
 local Server = game:GetService("ReplicatedStorage"):WaitForChild("PanelRemote")
-local LocalCommands = require(script.Parent.Client.VanillaCommands)
+local LocalCommands = require(script.Parent:WaitForChild("Client").VanillaCommands)
+local Theme = require(script.Parent.Theme)
 
 local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
 local PlayerList = Panel.MainFrame.PlayerFrame
-local Terminal = Panel.MainFrame.Terminal
+local Terminal = Panel.Terminal.Interface
 
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
@@ -20,6 +22,7 @@ local DisplayInformation = 0 -- 0 = Display and name, 1 = Name and UserId, 2 = U
 -- every Location element with Name in an attempt to find the string which is asked for. Always returns a table.
 --]]
 local function CompleteName(Location, Name)
+  print(Name)
   local ForReturn = {}
 
   local len = string.len(Name)
@@ -157,8 +160,8 @@ local function RunCommand(Command, Arguments)
 end
 
 --[[
--- ChangeDisplayInfo(Number, Str) accepts Number number and Str string as arguments, and based on it modifies DisplayInformation
--- and SettingsContainer.PlayerButtonNaming ScrollingFrame.
+-- ChangeDisplayInfo(Number, Str) accepts Number number and Str string as arguments, and based on them modifies 
+-- DisplayInformation and SettingsContainer.PlayerButtonNaming ScrollingFrame.
 --]]
 local function ChangeDisplayInfo(Number, Str)
   SettingsContainer.PlayerButtonNaming.ScrollingFrame.Visible = false
@@ -167,13 +170,49 @@ local function ChangeDisplayInfo(Number, Str)
   RefreshPlayerList()
 end
 
+--[[
+-- SetDisplayOrder() is the function that handles AlwaysOnTop setting. Basically, when called, finds the highest DisplayOrder 
+-- existing within the player's GUI and sets the panel's DisplayOrder to +1 that.
+--]]
+local function SetHighestDisplayOrder()
+  local HighestDisplayOrder = 1
+
+  for _, v in pairs(Players.LocalPlayer.PlayerGui:GetChildren()) do
+    if v == Panel then continue end
+    if v.DisplayOrder > HighestDisplayOrder then HighestDisplayOrder = v.DisplayOrder end
+  end
+
+  Panel.DisplayOrder = HighestDisplayOrder + 1
+end
+
+--[[
+-- HandleVisibilityAnimation(Frame, In) accepts Frame instance and In bool arguments, and based on them play the popup / close
+-- animation, whose properties are defined in Theme module. The function yields until animation is finished. In argument
+-- is true when Scaling should go to 0 and false when scaling should go to 1.
+--]]
+local function HandleVisibilityAnimation(Frame, In)
+  local Tween
+
+  if In then
+    Tween = TweenService:Create(Frame.UIScale, Theme.WindowClose, {Scale = 0})
+  else
+    Tween = TweenService:Create(Frame.UIScale, Theme.WindowPopup, {Scale = 1})
+  end
+
+  Tween:Play()
+  if not In then Frame.Visible = true end
+  Tween.Completed:Wait()
+  if In then Frame.Visible = false end
+end
+
 Panel.PanelButton.MouseButton1Up:Connect(function()
-  Panel.MainFrame.Visible = not Panel.MainFrame.Visible
-  Panel.Settings.Visible = false
+  HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
+  if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
+  if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
 end)
 
 Panel.MainFrame.Title.ImageButton.MouseButton1Up:Connect(function()
-  Panel.Settings.Visible = not Panel.Settings.Visible
+  HandleVisibilityAnimation(Panel.Settings, Panel.Settings.Visible)
   Panel.Assets.Quack:Play()
 end)
 
@@ -182,12 +221,11 @@ Players.PlayerAdded:Connect(function()
 end)
 
 UIS.InputBegan:Connect(function(Input, Processed)
-  if Processed then return end
-
-  if Input.KeyCode == Enum.KeyCode.Equals then
-    Panel.MainFrame.Visible = not Panel.MainFrame.Visible
-    Panel.Settings.Visible = false
-  elseif Input.KeyCode == Enum.KeyCode.LeftControl then
+  if Input.KeyCode == Enum.KeyCode.Equals and not Processed then
+    HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
+    if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
+    if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Settings, true) end
+  elseif Input.KeyCode == Enum.KeyCode.LeftControl and not Processed then
     CTRL_Down = true
   elseif Input.KeyCode == Enum.KeyCode.Tab and Terminal.CommandLine.TextBox:IsFocused() then
     --[[
@@ -198,13 +236,19 @@ UIS.InputBegan:Connect(function(Input, Processed)
 
     if #Data == 1 then
       -- Completion for command name
-      local Command
+      local Command = {}
       for _, PluginTable in pairs(PluginsName) do
 
       end
-      local Completion = CompleteName()
+      -- local Completion = CompleteName()
     elseif #Data == 2 then
       -- Completion for Player name
+      local PlayersFound = CompleteName(game.Players:GetPlayers(), string.sub(Data[2], 1, string.len(Data[2])))
+      if PlayersFound[1] == nil then Panel.Assets.Quack:Play() return end
+
+      game:GetService("RunService").RenderStepped:Wait()
+      Terminal.CommandLine.TextBox.Text = Data[1].." "..PlayerName[1]
+      Terminal.CommandLine.TextBox.CursorPosition = string.len(Terminal.CommandLine.TextBox.Text) + 1
     end
   end
 end)
@@ -238,7 +282,7 @@ end)
 
 SettingsContainer.TerminalVisibility.State.MouseButton1Up:Connect(function()
   HandleBoolSetting("TerminalVisibility")
-  Panel.MainFrame.Terminal.Visible = Panel:GetAttribute("TerminalVisibility")
+  HandleVisibilityAnimation(Panel.Terminal, not Panel:GetAttribute("TerminalVisibility"))
 end)
 
 SettingsContainer.ResizingEnabled.State.MouseButton1Up:Connect(function()
@@ -263,6 +307,7 @@ end)
 
 Terminal.CommandLine.TextBox.FocusLost:Connect(function()
   local Text = Terminal.CommandLine.TextBox.Text
+  local Data = Text:split(" ")
 
 end)
 
@@ -305,6 +350,7 @@ for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
   end)
 end
 
+if Panel:GetAttribute("AlwaysOnTop") then SetHighestDisplayOrder() end
 Panel:SetAttribute("ResizingEnabled", true)
 Panel:SetAttribute("OutputOnExecution", true)
 RefreshPlayerList()
