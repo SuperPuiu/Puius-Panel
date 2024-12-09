@@ -130,21 +130,6 @@ local function ChangeDisplayInfo(Number, Str)
 end
 
 --[[
--- SetDisplayOrder() is the function that handles AlwaysOnTop setting. Basically, when called, finds the highest DisplayOrder 
--- existing within the player's GUI and sets the panel's DisplayOrder to +1 that.
---]]
-local function SetHighestDisplayOrder()
-  local HighestDisplayOrder = 1
-
-  for _, v in pairs(Players.LocalPlayer.PlayerGui:GetChildren()) do
-    if v == Panel then continue end
-    if v.DisplayOrder > HighestDisplayOrder then HighestDisplayOrder = v.DisplayOrder end
-  end
-
-  Panel.DisplayOrder = HighestDisplayOrder + 1
-end
-
---[[
 -- HandleVisibilityAnimation(Frame, In) accepts Frame instance and In bool arguments, and based on them play the popup / close
 -- animation, whose properties are defined in Theme module. The function yields until animation is finished. In argument
 -- is true when Scaling should go to 0 and false when scaling should go to 1.
@@ -282,7 +267,7 @@ for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
   end)
 end
 
-if Panel:GetAttribute("AlwaysOnTop") then SetHighestDisplayOrder() end
+if Panel:GetAttribute("AlwaysOnTop") then Shared.SetHighestDisplayOrder() end
 Panel:SetAttribute("ResizingEnabled", true)
 Panel:SetAttribute("OutputOnExecution", true)
 RefreshPlayerList()

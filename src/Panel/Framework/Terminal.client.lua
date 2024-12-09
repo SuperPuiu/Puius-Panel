@@ -94,3 +94,5 @@ Terminal.CommandLine.TextBox.FocusLost:Connect(function()
   if not Data[2] then return end
   Shared.RunCommand(Data[1], {game.Players:FindFirstChild(Data[2])}, {Data[3]})
 end)
+
+if Panel:GetAttribute("AlwaysOnTop") then Shared.SetHighestDisplayOrder() end

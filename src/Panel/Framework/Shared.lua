@@ -18,6 +18,22 @@ module.RunCommand = function(Command, PlayersSelected, Arguments)
 
   print(Server:InvokeServer({Command = Command, Targets = PlayersSelected, Arguments = Arguments}))
 end
+
+--[[
+-- SetDisplayOrder() is the function that handles AlwaysOnTop setting. Basically, when called, finds the highest DisplayOrder 
+-- existing within the player's GUI and sets the panel's DisplayOrder to +1 that.
+--]]
+module.SetHighestDisplayOrder = function()
+  local HighestDisplayOrder = 1
+
+  for _, v in pairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
+    if v == script.Parent.Parent then continue end
+    if v.DisplayOrder > HighestDisplayOrder then HighestDisplayOrder = v.DisplayOrder end
+  end
+
+  script.Parent.Parent.DisplayOrder = HighestDisplayOrder + 1
+end
+
 --[[
 -- Unimplemented.
 --]]
