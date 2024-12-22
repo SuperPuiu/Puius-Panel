@@ -8,7 +8,7 @@ local Shared = require(script.Parent.Shared)
 
 local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
-local PlayerList = Panel.MainFrame.PlayerFrame
+local PlayerList = Panel.MainFrame.PlayerList
 
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
@@ -40,7 +40,7 @@ local function RefreshPlayerList()
   -- a new button or updates an existing button within PlayerList ScrollingFrame. Order variable has to be manually updated.
   --]]
   local function CreatePlayerButton(Player)
-    local Template = Panel.MainFrame.PlayerFrame:FindFirstChild(Player.Name)
+    local Template = Panel.MainFrame.PlayerList:FindFirstChild(Player.Name)
 
     if not Template then
       -- If there isn't any existing button, simply create a new one with the template found within PlayerList and update its elements.
@@ -95,15 +95,15 @@ local function RefreshPlayerList()
   -- The following loop aims to create (or update, somehow) existing Team TextLabels and add Players under their respective team.
   for _, Team in pairs(game:GetService("Teams"):GetTeams()) do
     Order = Order + 1
-    local TeamTemplate = Panel.MainFrame.PlayerFrame:FindFirstChild(Team.Name)
+    local TeamTemplate = Panel.MainFrame.PlayerList:FindFirstChild(Team.Name)
 
     if not TeamTemplate then
-      TeamTemplate = Panel.MainFrame.PlayerFrame.TextLabel:Clone()
+      TeamTemplate = Panel.MainFrame.PlayerList.TextLabel:Clone()
     end
 
     TeamTemplate.Text = Team.Name
     TeamTemplate.Name = Team.Name
-    TeamTemplate.Parent = Panel.MainFrame.PlayerFrame
+    TeamTemplate.Parent = Panel.MainFrame.PlayerList
     TeamTemplate.BackgroundColor3 = Team.TeamColor.Color
     TeamTemplate.Visible = true
     TeamTemplate.LayoutOrder = Order
@@ -233,10 +233,10 @@ for Name, PluginTable in pairs(PluginsName) do
     continue
   end
 
-  local Template = Panel.MainFrame.Commands.Template:Clone()
+  local Template = Panel.MainFrame.ContentDisplay.TemplateContainer:Clone()
   Template.Name = Name
   Template.TextLabel.Text = PluginTable.Name or Name
-  Template.Parent = Panel.MainFrame.Commands
+  Template.Parent = Panel.MainFrame.ContentDisplay
 
   for P_Name, Plugin in pairs(PluginTable) do
     -- Ignore plugin metadata
@@ -248,13 +248,10 @@ for Name, PluginTable in pairs(PluginsName) do
     ButtonTemplate.Visible = true
   end
 
-  Template.ScrollingFrame.CanvasSize = UDim2.new(0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.X,
-    0, Template.ScrollingFrame.UIListLayout.AbsoluteContentSize.Y)
+  Template.CanvasSize = UDim2.new(0, Template.UIListLayout.AbsoluteContentSize.X,
+    0, Template.UIListLayout.AbsoluteContentSize.Y)
 
   Template.Visible = true
-
-  Panel.MainFrame.Commands.CanvasSize = UDim2.new(0, Panel.MainFrame.Commands.UIListLayout.AbsoluteContentSize.X,
-    0, Panel.MainFrame.Commands.UIListLayout.AbsoluteContentSize.Y)
 end
 
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
