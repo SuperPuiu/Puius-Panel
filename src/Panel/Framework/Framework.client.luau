@@ -182,28 +182,51 @@ for Name, PluginTable in pairs(PluginsName) do
   if Name == "LocalCommands" then continue end
   if Panel.MainFrame.Commands:FindFirstChild(Name) then
     warn("[PANEL]: Category already exists. Continuing with other plugins.")
-    continue
+  else
+    local Template = Panel.MainFrame.ContentDisplay.TemplateContainer:Clone()
+    Template.Name = PluginTable.Name or Name
+    -- Template.TextLabel.Text = PluginTable.Name or Name
+    Template.Parent = Panel.MainFrame.ContentDisplay
+
+    for P_Name, Plugin in pairs(PluginTable) do
+      -- Ignore plugin metadata
+      if not (P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments") then
+        -- Create the button
+        local ButtonTemplate = Template.Template:Clone()
+        ButtonTemplate.Name = Plugin
+        ButtonTemplate.TextLabel.Text = Plugin
+        ButtonTemplate.Parent = Template
+        ButtonTemplate.Visible = true
+
+        ButtonTemplate.ImageButton.MouseButton1Up:Connect(function()
+          local SizeY = 25
+
+          if ButtonTemplate.Buttons.Execute.Visible then  SizeY = 0 end
+
+          for _, v in pairs(ButtonTemplate.Buttons:GetChildren()) do
+            if v.Name == "UIListLayout" or v.Name == "TextButton" then
+              continue
+            end
+            if SizeY == 25 then v.Visible = true end
+
+            local Tween = TweenService:Create(v, TweenInfo.new(0.5), {Size = UDim2.new(0.2, 0, 0, SizeY)}) -- TODO: Allow customizability through Shared module
+            Tween:Play()
+
+            Tween.Completed:Connect(function()
+              if SizeY == 0 then v.Visible = false end
+            end)
+          end
+        end)
+
+        local Execute = ButtonTemplate.Buttons.TextButton:Clone()
+        Execute.Name = "Execute"
+        Execute.Text = "Execute"
+        Execute.Parent = ButtonTemplate.Buttons
+      end
+    end
+
+    Template.Visible = true
   end
-
-  local Template = Panel.MainFrame.ContentDisplay.TemplateContainer:Clone()
-  Template.Name = PluginTable.Name or Name
-  -- Template.TextLabel.Text = PluginTable.Name or Name
-  Template.Parent = Panel.MainFrame.ContentDisplay
-
-  for P_Name, Plugin in pairs(PluginTable) do
-    -- Ignore plugin metadata
-    if P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments" then continue end
-    local ButtonTemplate = Template.Template:Clone()
-    ButtonTemplate.Name = Plugin
-    ButtonTemplate.TextLabel.Text = Plugin
-    ButtonTemplate.Parent = Template
-    ButtonTemplate.Visible = true
-  end
-
-  -- Template.CanvasSize = UDim2.new(0, Template.UIListLayout.AbsoluteContentSize.X,
-  --  0, Template.UIListLayout.AbsoluteContentSize.Y)
-
-  Template.Visible = true
 end
 
 for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
