@@ -81,7 +81,7 @@ local function RefreshPlayerList()
       end)
     end
 
-    Template.Parent = PlayerList
+    Template.Parent = PlayerList.Container
     Template.Name = Player.Name
     Template.LayoutOrder = Order -- Order is modified outside the function.
 
@@ -122,11 +122,6 @@ end
 Panel.PanelButton.MouseButton1Up:Connect(function()
   HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
   -- if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
-end)
-
-DisplayFrame.Parent.Commands.Container.Settings.MouseButton1Up:Connect(function()
-  -- HandleVisibilityAnimation(Panel.Settings, Panel.Settings.Visible)
-  ChangeSectionDisplayed(DisplayFrame.SettingsContainer)
 end)
 
 Players.PlayerAdded:Connect(function()
@@ -180,11 +175,11 @@ end)
 
 for Name, PluginTable in pairs(PluginsName) do
   if Name == "LocalCommands" then continue end
-  if Panel.MainFrame.Commands:FindFirstChild(Name) then
+  if Panel.MainFrame.Plugins:FindFirstChild(Name) then
     warn("[PANEL]: Category already exists. Continuing with other plugins.")
   else
     local Template = Panel.MainFrame.ContentDisplay.TemplateContainer:Clone()
-    Template.Name = PluginTable.Name or Name
+    Template.Name = Name
     -- Template.TextLabel.Text = PluginTable.Name or Name
     Template.Parent = Panel.MainFrame.ContentDisplay
 
@@ -201,19 +196,28 @@ for Name, PluginTable in pairs(PluginsName) do
         ButtonTemplate.ImageButton.MouseButton1Up:Connect(function()
           local SizeY = 25
 
-          if ButtonTemplate.Buttons.Execute.Visible then  SizeY = 0 end
-
+          if ButtonTemplate.Buttons.Execute.Visible then SizeY = 0 end
+          
+          TweenService:Create(ButtonTemplate.ImageButton, TweenInfo.new(0.25), {Rotation = ButtonTemplate.ImageButton.Rotation + 180}):Play()
           for _, v in pairs(ButtonTemplate.Buttons:GetChildren()) do
             if v.Name == "UIListLayout" or v.Name == "TextButton" then
               continue
             end
-            if SizeY == 25 then v.Visible = true end
+            if SizeY == 25 then 
+              v.Visible = true
+            else
+              v.TextTransparency = 1
+            end
 
-            local Tween = TweenService:Create(v, TweenInfo.new(0.5), {Size = UDim2.new(0.2, 0, 0, SizeY)}) -- TODO: Allow customizability through Shared module
+            local Tween = TweenService:Create(v, TweenInfo.new(0.25), {Size = UDim2.new(0.2, 0, 0, SizeY)}) -- TODO: Allow customizability through Shared module
             Tween:Play()
 
             Tween.Completed:Connect(function()
-              if SizeY == 0 then v.Visible = false end
+              if SizeY == 0 then 
+                v.Visible = false
+              else
+                v.TextTransparency = 0
+              end
             end)
           end
         end)
@@ -229,8 +233,8 @@ for Name, PluginTable in pairs(PluginsName) do
   end
 end
 
-for _, Button in pairs(GUI.MainFrame.Commands:GetDescendants()) do
-  if not Button:IsA("TextButton") or Button.Name == "Settings" then continue end
+for _, Button in pairs(GUI.MainFrame.Plugins.Container:GetChildren()) do
+  if not Button:IsA("TextButton") then continue end
 
   Button.MouseButton1Up:Connect(function()
     --[[Shared.RunCommand(Button.Name, PlayersSelected)
