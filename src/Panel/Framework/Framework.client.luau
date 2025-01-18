@@ -15,7 +15,7 @@ local PlayerList = Panel.MainFrame.PlayerList
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
 local PluginsName = Shared.GetPluginsName() -- {PluginName = {Name = Name}}
-local SectionDisplayed = nil
+local SectionDisplayed, CommandVisible = nil, nil
 
 --[[
 -- ChangePluginsShown(NewSection) accepts NewSection Frame argument and aims to facilitate the changing between
@@ -173,32 +173,39 @@ SettingsContainer.PlayerButtonNaming.State.MouseButton1Up:Connect(function()
   SettingsContainer.PlayerButtonNaming.ScrollingFrame.Visible = true
 end)
 
+DisplayFrame.Arguments.Execute.Interact.MouseButton1Up:Connect(function()
+  Shared.RunCommand(CommandVisible, PlayersSelected)
+  PlayersSelected = {}
+  RefreshPlayerList()
+end)
+
 for Name, PluginTable in pairs(PluginsName) do
   if Name == "LocalCommands" then continue end
   if Panel.MainFrame.Plugins:FindFirstChild(Name) then
     warn("[PANEL]: Category already exists. Continuing with other plugins.")
     continue
   end
-  local Template = DisplayFrame.Buttons.Template:Clone()
-  Template.Name = Name
-  -- Template.TextLabel.Text = PluginTable.Name or Name
-  Template.Parent = DisplayFrame.Buttons
+
+  local ButtonList = DisplayFrame.Buttons.Template:Clone()
+  ButtonList.Name = Name
+  ButtonList.Parent = DisplayFrame.Buttons
 
   for P_Name, Plugin in pairs(PluginTable) do
     -- Ignore plugin metadata
     if P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments" then continue end
     -- Create the button
-    local ButtonTemplate = Template.TextButton:Clone()
-    ButtonTemplate.Name = Plugin
-    ButtonTemplate.Text = Plugin
-    ButtonTemplate.Parent = Template
-    ButtonTemplate.Visible = true
+    local PluginButton = ButtonList.TextButton:Clone()
+    PluginButton.Name = Plugin
+    PluginButton.Text = Plugin
+    PluginButton.Parent = ButtonList
+    PluginButton.Visible = true
 
-    ButtonTemplate.MouseButton1Up:Connect(function()
+    PluginButton.MouseButton1Up:Connect(function()
       for _, v in pairs(DisplayFrame.Arguments:GetChildren()) do
-        if v.Name ~= "Execute" and v:IsA("Frame") then v.Visible = false end
+        if v.Name ~= "Execute" and v:IsA("Frame") then v:Destroy() end
       end
-
+      
+      CommandVisible = Plugin
       DisplayFrame.Arguments.Execute.Visible = true
     end)
   end

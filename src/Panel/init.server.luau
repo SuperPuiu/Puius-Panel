@@ -62,7 +62,7 @@ local function Main()
         local Command = Data.Command
         local Targets = Data.Targets
         local Arguments = Data.Arguments
-
+        
         if not Arguments then Arguments = {} end
         if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
         return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
