@@ -189,7 +189,7 @@ for Name, PluginTable in pairs(PluginsName) do
   local ButtonList = DisplayFrame.Buttons.Template:Clone()
   ButtonList.Name = Name
   ButtonList.Parent = DisplayFrame.Buttons
-
+  
   for P_Name, Plugin in pairs(PluginTable) do
     -- Ignore plugin metadata
     if P_Name == "Name" or P_Name == "Descriptions" or P_Name == "RequireExArguments" then continue end
@@ -202,7 +202,22 @@ for Name, PluginTable in pairs(PluginsName) do
 
     PluginButton.MouseButton1Up:Connect(function()
       for _, v in pairs(DisplayFrame.Arguments:GetChildren()) do
-        if v.Name ~= "Execute" and v:IsA("Frame") then v:Destroy() end
+        if v.Name ~= "Execute" and v:IsA("Frame") and v.Name ~= "InputField" then v:Destroy() end
+      end
+      
+      if PluginTable.RequireExArguments[Plugin] then
+        for FieldName, RequiredData in pairs(PluginTable.RequireExArguments[Plugin]) do
+          local FieldTemplate
+
+          if RequiredData == "string" then
+            FieldTemplate = DisplayFrame.Arguments.InputField:Clone()
+          end
+          
+          FieldTemplate.Parent = DisplayFrame.Arguments
+          FieldTemplate.TextLabel.Text = FieldName
+          FieldTemplate.Name = FieldName
+          FieldTemplate.Visible = true
+        end
       end
       
       CommandVisible = Plugin

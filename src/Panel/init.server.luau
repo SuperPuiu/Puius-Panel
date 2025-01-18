@@ -37,6 +37,8 @@ local function Main()
     local Commands = require(Plugin)
     PluginsName[Plugin.Name] = {}
     PluginsName[Plugin.Name]["Name"] = Commands.Name
+    PluginsName[Plugin.Name]["RequireExArguments"] = Commands.RequireExArguments
+    PluginsName[Plugin.Name]["Descriptions"] = Commands.Descriptions
 
     for Command, Attached in pairs(Commands) do
       if Command == "Name" or Command == "RequireExArguments" or Command == "Descriptions" then continue end

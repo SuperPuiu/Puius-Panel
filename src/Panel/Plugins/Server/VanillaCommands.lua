@@ -22,7 +22,11 @@ module.Descriptions = {
   ["RemoveTool"] = "removetool <player> <tool>"
   -- TODO: Finish descriptions.
 } -- This allows help command to display information. When a command is not found within it, default text will be shown.
-module.RequireExArguments = {} -- This allows the implementation of extended arguments. TODO.
+module.RequireExArguments = {
+  ["Kick"] = {
+    ["Message"] = "string"
+  }
+} -- This allows the implementation of extended arguments. TODO.
 
 -- Commands
 
