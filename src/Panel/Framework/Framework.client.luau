@@ -3,7 +3,6 @@ local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
-local GUI = script.Parent.Parent
 local Theme = require(script.Parent.Theme)
 local Shared = require(script.Parent.Shared)
 
@@ -11,6 +10,7 @@ local Panel = script.Parent.Parent
 local SettingsContainer = Panel.Settings.ScrollingFrame
 local DisplayFrame = Panel.MainFrame.ContentDisplay
 local PlayerList = Panel.MainFrame.PlayerList
+local PluginsList = Panel.MainFrame.Plugins.Container
 
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
@@ -174,17 +174,37 @@ SettingsContainer.PlayerButtonNaming.State.MouseButton1Up:Connect(function()
 end)
 
 DisplayFrame.Arguments.Execute.Interact.MouseButton1Up:Connect(function()
-  Shared.RunCommand(CommandVisible, PlayersSelected)
+  local ArgumentsTable = {}
+  
+  for _, Argument in pairs(DisplayFrame.Arguments:GetChildren()) do
+    if not Argument:IsA("Frame") then continue end
+    if Argument.Name == "InputField" or Argument.Name == "Execute" or Argument.Name == "BoolField" then continue end
+
+    if Argument:GetAttribute("DataType") == "string" then
+      ArgumentsTable[Argument.Name] = Argument.TextBox.Text
+    elseif Argument:GetAttribute("DataType") == "bool" then
+      ArgumentsTable[Argument.Name] = Argument.TextButton:GetAttribute("Status")
+    elseif Argument:GetAttribute("DataType") == "number" then
+      ArgumentsTable[Argument.Name] = tonumber(Argument.TextBox.Text)
+    end
+  end
+
+  Shared.RunCommand(CommandVisible, PlayersSelected, ArgumentsTable)
   PlayersSelected = {}
   RefreshPlayerList()
 end)
 
 for Name, PluginTable in pairs(PluginsName) do
   if Name == "LocalCommands" then continue end
-  if Panel.MainFrame.Plugins:FindFirstChild(Name) then
-    warn("[PANEL]: Category already exists. Continuing with other plugins.")
+  if Panel.MainFrame.Plugins.Container:FindFirstChild(Name) then
+    warn(string.format("[PANEL]: Category %s already exists. Continuing with other plugins.", Name))
     continue
   end
+  
+  local DisplayButton = PluginsList.Settings:Clone()
+  DisplayButton.Parent = PluginsList
+  DisplayButton.TextLabel.Text = PluginTable.Name
+  DisplayButton.Name = Name
 
   local ButtonList = DisplayFrame.Buttons.Template:Clone()
   ButtonList.Name = Name
@@ -202,17 +222,30 @@ for Name, PluginTable in pairs(PluginsName) do
 
     PluginButton.MouseButton1Up:Connect(function()
       for _, v in pairs(DisplayFrame.Arguments:GetChildren()) do
-        if v.Name ~= "Execute" and v:IsA("Frame") and v.Name ~= "InputField" then v:Destroy() end
+        if v.Name ~= "Execute" and v:IsA("Frame") and v.Name ~= "InputField" and v.Name ~= "BoolField" then v:Destroy() end
       end
       
       if PluginTable.RequireExArguments[Plugin] then
         for FieldName, RequiredData in pairs(PluginTable.RequireExArguments[Plugin]) do
           local FieldTemplate
 
-          if RequiredData == "string" then
+          if RequiredData == "string" or RequiredData == "number" then
             FieldTemplate = DisplayFrame.Arguments.InputField:Clone()
+          elseif RequiredData == "bool" then
+            FieldTemplate = DisplayFrame.Arguments.BoolField:Clone()
+            
+            FieldTemplate.TextButton.MouseButton1Up:Connect(function()
+              FieldTemplate.TextButton:SetAttribute("Status", not FieldTemplate.TextButton:GetAttribute("Status"))
+
+              if FieldTemplate.TextButton:GetAttribute("Status") == true then
+                FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+              else
+                FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+              end
+            end)
           end
           
+          FieldTemplate:SetAttribute("DataType", RequiredData)
           FieldTemplate.Parent = DisplayFrame.Arguments
           FieldTemplate.TextLabel.Text = FieldName
           FieldTemplate.Name = FieldName
@@ -222,11 +255,13 @@ for Name, PluginTable in pairs(PluginsName) do
       
       CommandVisible = Plugin
       DisplayFrame.Arguments.Execute.Visible = true
+      
+      DisplayFrame.Arguments.CanvasSize = UDim2.fromOffset(0, DisplayFrame.Arguments.UIListLayout.AbsoluteContentSize.Y)
     end)
   end
 end
 
-for _, Button in pairs(GUI.MainFrame.Plugins.Container:GetChildren()) do
+for _, Button in pairs(Panel.MainFrame.Plugins.Container:GetChildren()) do
   if not Button:IsA("TextButton") then continue end
 
   Button.MouseButton1Up:Connect(function()
@@ -235,12 +270,13 @@ for _, Button in pairs(GUI.MainFrame.Plugins.Container:GetChildren()) do
     RefreshPlayerList()]]
     ChangePluginShown(DisplayFrame.Buttons[Button.Name])
     game:GetService("RunService").RenderStepped:Wait()
-    DisplayFrame.Buttons.CanvasSize = UDim2.new(0, DisplayFrame.Buttons[Button.Name].UIListLayout.AbsoluteContentSize.X,
-                                                0, DisplayFrame.Buttons[Button.Name].UIListLayout.AbsoluteContentSize.Y)
+    DisplayFrame.Buttons.CanvasSize = UDim2.fromOffset(0, DisplayFrame.Buttons[Button.Name].UIListLayout.AbsoluteContentSize.Y)
   end)
 end
 
 if Panel:GetAttribute("AlwaysOnTop") then Shared.SetHighestDisplayOrder() end
 Panel:SetAttribute("ResizingEnabled", true)
 Panel:SetAttribute("OutputOnExecution", true)
+
+PluginsList.Parent.CanvasSize = UDim2.new(UDim2.fromOffset(0, PluginsList.UIListLayout.AbsoluteContentSize.Y))
 RefreshPlayerList()

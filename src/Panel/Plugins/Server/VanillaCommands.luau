@@ -12,7 +12,7 @@ local function NextPlayer(List, Index)
 end
 
 -- Metadata
-module.Name = "Vanilla Commands" -- This gives the category name when generating the buttons. Not adding it will result in the usage of the module's name.
+module.Name = "Vanilla Commands" -- This gives the panel button a custom name. Not adding it will result in the usage of the module's name.
 module.Descriptions = {
   ["Kick"] = "kick <player> <message>", -- Use the same name which you used to implement the functionality of the said command.
   ["Ban"] = "ban <player> <message>",
@@ -25,8 +25,31 @@ module.Descriptions = {
 module.RequireExArguments = {
   ["Kick"] = {
     ["Message"] = "string"
+  },
+
+  ["Give"] = {
+    ["Tool"] = "string"
+  },
+
+  ["RemoveTool"] = {
+    ["Tool"] = "string"
+  },
+
+  ["Ban"] = {
+    ["DisplayReason"] = "string",
+    ["PrivateReason"] = "string",
+    ["Duration"] = "number",
+    ["ExcludeAltAccounts"] = "bool",
+  },
+
+  ["Unban"] = {
+    ["UserId"] = "number"
+  },
+
+  ["Team"] = {
+    ["Team"] = "string"
   }
-} -- This allows the implementation of extended arguments. TODO.
+} -- This allows the implementation of extended arguments. They are automatically generated.
 
 -- Commands
 
@@ -34,7 +57,7 @@ module.Kick = function(_, Targets, Arguments)
   for i = 1, #Targets do
     local Player = NextPlayer(Targets, i)
 
-    if Player then Player:Kick(Arguments[1] or "You have been kicked by a moderator.") end
+    if Player then Player:Kick(Arguments.Message or "You have been kicked by a moderator.") end
   end
 end
 
@@ -49,9 +72,9 @@ module.Ban = function(Executor, Targets, Arguments)
   local BanConfiguration = {
     UserIds = {Target.UserId},
     Duration = -1, -- Infinite ban.
-    DisplayReason = Arguments[1] or "",
-    PrivateReason = Arguments[2] or "",
-    ExcludeAltAccounts = Arguments[3] or true,
+    DisplayReason = Arguments.DisplayReason or "",
+    PrivateReason = Arguments.PrivateReason or "",
+    ExcludeAltAccounts = Arguments.ExcludeAltAccounts or true,
     ApplyToUniverse = true
   }
 
@@ -82,7 +105,7 @@ module.RemoveTool = function(_, Targets, Arguments)
     local Player = NextPlayer(Targets, i)
     if not Player then continue end
 
-    if Player.Backpack:FindFirstChild(Arguments[1] or "") then Player.Backpack[Arguments[1]]:Destroy() end
+    if Player.Backpack:FindFirstChild(Arguments.Tool or "") then Player.Backpack[Arguments.Tool]:Destroy() end
   end
 end
 
@@ -111,8 +134,8 @@ end
 
 module.Team = function(_, Targets, Arguments)
   if not Arguments then return "No arguments passed for TEAM command." end
-  if typeof(Arguments[1]) ~= "string" then return "Argument 1 isn't a string for TEAM command. Type is: "..typeof(Arguments[1]) end
-  local Team = game:GetService("Teams"):FindFirstChild(Arguments[1] or "")
+  if typeof(Arguments.Team) ~= "string" then return "Argument 1 isn't a string for TEAM command. Type is: "..typeof(Arguments.Team) end
+  local Team = game:GetService("Teams"):FindFirstChild(Arguments.Team or "")
 
   if not Team then return "Argument 1 doesn't exist for TEAM command." end
 
@@ -123,7 +146,7 @@ module.Team = function(_, Targets, Arguments)
 end
 
 module.Give = function(_, Targets, Arguments)
-  local Tool = Replicated:FindFirstChild(Arguments[1] or "")
+  local Tool = Replicated:FindFirstChild(Arguments.Tool or "")
 
   if Tool then
     for i = 1, #Targets do
