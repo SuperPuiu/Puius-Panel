@@ -12,6 +12,10 @@ local DisplayFrame = Panel.MainFrame.ContentDisplay
 local PlayerList = Panel.MainFrame.PlayerList
 local PluginsList = Panel.MainFrame.Plugins.Container
 
+local DraggableObject = require(script.Parent.DraggableUI)
+local Drag = DraggableObject.new(Panel.MainFrame)
+Drag:Enable()
+
 local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
 local PluginsName = Shared.GetPluginsName() -- {PluginName = {Name = Name}}
@@ -226,30 +230,32 @@ for Name, PluginTable in pairs(PluginsName) do
       end
       
       if PluginTable.RequireExArguments[Plugin] then
-        for FieldName, RequiredData in pairs(PluginTable.RequireExArguments[Plugin]) do
-          local FieldTemplate
+        for Index, RequiredData in pairs(PluginTable.RequireExArguments[Plugin]) do
+          for FieldName, FieldType in pairs(RequiredData) do -- There might be a better way to do this
+            local FieldTemplate
 
-          if RequiredData == "string" or RequiredData == "number" then
-            FieldTemplate = DisplayFrame.Arguments.InputField:Clone()
-          elseif RequiredData == "bool" then
-            FieldTemplate = DisplayFrame.Arguments.BoolField:Clone()
+            if FieldType == "string" or FieldType == "number" then
+              FieldTemplate = DisplayFrame.Arguments.InputField:Clone()
+            elseif FieldType == "bool" then
+              FieldTemplate = DisplayFrame.Arguments.BoolField:Clone()
             
-            FieldTemplate.TextButton.MouseButton1Up:Connect(function()
-              FieldTemplate.TextButton:SetAttribute("Status", not FieldTemplate.TextButton:GetAttribute("Status"))
+              FieldTemplate.TextButton.MouseButton1Up:Connect(function()
+                FieldTemplate.TextButton:SetAttribute("Status", not FieldTemplate.TextButton:GetAttribute("Status"))
 
-              if FieldTemplate.TextButton:GetAttribute("Status") == true then
-                FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-              else
-                FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-              end
-            end)
-          end
+                if FieldTemplate.TextButton:GetAttribute("Status") == true then
+                  FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+                else
+                  FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+                end
+              end)
+            end
           
-          FieldTemplate:SetAttribute("DataType", RequiredData)
-          FieldTemplate.Parent = DisplayFrame.Arguments
-          FieldTemplate.TextLabel.Text = FieldName
-          FieldTemplate.Name = FieldName
-          FieldTemplate.Visible = true
+            FieldTemplate:SetAttribute("DataType", RequiredData)
+            FieldTemplate.Parent = DisplayFrame.Arguments
+            FieldTemplate.TextLabel.Text = FieldName
+            FieldTemplate.Name = FieldName
+            FieldTemplate.Visible = true
+          end
         end
       end
       

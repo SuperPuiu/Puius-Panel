@@ -2,7 +2,7 @@
 -- The objective of pushing the terminal's code into its own script is so it can run without being tied to the "graphical" part of the
 -- panel. This means that you can use the terminal without having the actual "panel part" and vice versa. Hope it made sense.
 -- Shared module is _still_ required. It wouldn't make sense to maintain some functions which are found both within the graphical and 
--- not graphical parts of the panel.
+-- not 'graphical' parts of the panel.
 --]]
 
 local UIS = game:GetService("UserInputService")
@@ -10,6 +10,12 @@ local Shared = require(script.Parent.Shared)
 local Panel = script.Parent.Parent
 local Terminal = Panel.Terminal.Interface
 local PluginsName = Shared.GetPluginsName()
+
+local DraggableObject = require(script.Parent.DraggableUI)
+local Drag = DraggableObject.new(Terminal.Parent)
+Drag:Enable()
+
+local Combo = {"LeftControl", "Q"} -- Enum.KeyCode[Name]
 
 --[[
 -- CompleteName(Location, Name) accepts Location table and Name string as arguments. The function compares strlen(Name) characters of
@@ -35,6 +41,18 @@ local function CompleteName(Location, Name)
   end
 
   return ForReturn
+end
+
+--[[
+-- GetCommandByName(Name) accepts Name string as argument. The function searches Plugin table for key Name, not respecting uppercase
+-- letters and returns said command name. If no command is found, return nil.
+--]]
+local function GetCommandByName(Plugin, Name)
+  for P_Name, _ in pairs(Plugin) do
+    if string.lower(P_Name) == string.lower(Name) then return P_Name end
+  end
+
+  return nil
 end
 
 UIS.InputBegan:Connect(function(Input)
@@ -73,7 +91,9 @@ UIS.InputBegan:Connect(function(Input)
   elseif Input.KeyCode == Enum.KeyCode.Up then
 
   elseif Input.KeyCode == Enum.KeyCode.Down then
-
+  
+  elseif UIS:IsKeyDown(Enum.KeyCode[Combo[1]]) and UIS:IsKeyDown(Enum.KeyCode[Combo[2]]) then
+    Terminal.Parent.Visible = not Terminal.Parent.Visible
   end
 end)
 
@@ -90,9 +110,32 @@ Terminal.CommandLine.TextBox.FocusLost:Connect(function()
   Label.Visible = true
 
   Terminal.CommandLine.TextBox.Text = ""
-
+  
   if not Data[2] then return end
-  Shared.RunCommand(Data[1], {game.Players:FindFirstChild(Data[2])}, {Data[3]})
+
+  local Arguments = {}
+  local Command
+  local CommandRequirements
+  
+  for _, PluginTable in pairs(PluginsName) do
+    if not PluginTable.RequireExArguments then continue end
+    Command = GetCommandByName(PluginTable, Data[1])
+    if not Command then continue end
+
+    local RequireExArguments = PluginTable.RequireExArguments
+    CommandRequirements = RequireExArguments[Command]
+    if CommandRequirements then break end
+  end
+
+  if not CommandRequirements then return end
+  
+  for i = 3, #Data do
+    local FieldName, FieldType = next(CommandRequirements[i - 2], nil)
+    Arguments[FieldName] = Data[i]
+  end
+  
+  print(Arguments)
+  Shared.RunCommand(Command, {game.Players:FindFirstChild(Data[2])}, Arguments)
 end)
 
 if Panel:GetAttribute("AlwaysOnTop") then Shared.SetHighestDisplayOrder() end

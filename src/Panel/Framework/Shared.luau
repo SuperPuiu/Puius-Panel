@@ -96,6 +96,7 @@ module.GetPluginsName = function()
   for P_Name, _ in pairs(LocalCommands) do
     PluginsName["LocalCommands"][P_Name] = P_Name
   end
+
   return PluginsName
 end
 
