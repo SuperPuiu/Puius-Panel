@@ -24,30 +24,30 @@ module.Descriptions = {
 } -- This allows help command to display information. When a command is not found within it, default text will be shown.
 module.RequireExArguments = {
   ["Kick"] = {
-    ["Message"] = "string"
+    {["Message"] = "string"}
   },
 
   ["Give"] = {
-    ["Tool"] = "string"
+    {["Tool"] = "string"}
   },
 
   ["RemoveTool"] = {
-    ["Tool"] = "string"
+    {["Tool"] = "string"}
   },
 
   ["Ban"] = {
-    ["DisplayReason"] = "string",
-    ["PrivateReason"] = "string",
-    ["Duration"] = "number",
-    ["ExcludeAltAccounts"] = "bool",
+    {["DisplayReason"] = "string"},
+    {["PrivateReason"] = "string"},
+    {["Duration"] = "number"},
+    {["ExcludeAltAccounts"] = "bool"},
   },
 
   ["Unban"] = {
-    ["UserId"] = "number"
+    {["UserId"] = "number"}
   },
 
   ["Team"] = {
-    ["Team"] = "string"
+    {["Team"] = "string"}
   }
 } -- This allows the implementation of extended arguments. They are automatically generated.
 
