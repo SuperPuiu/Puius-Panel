@@ -250,7 +250,7 @@ for Name, PluginTable in pairs(PluginsName) do
               end)
             end
           
-            FieldTemplate:SetAttribute("DataType", RequiredData)
+            FieldTemplate:SetAttribute("DataType", FieldType)
             FieldTemplate.Parent = DisplayFrame.Arguments
             FieldTemplate.TextLabel.Text = FieldName
             FieldTemplate.Name = FieldName
