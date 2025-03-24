@@ -64,6 +64,7 @@ local function RefreshPlayerList()
       Template.ImageLabel.Image = game:GetService("Players"):GetUserThumbnailAsync(Player.UserId,
       Enum.ThumbnailType.HeadShot,
       Enum.ThumbnailSize.Size60x60)
+      Template.PlayerName.Text = Player.Name
 
       Player.Destroying:Connect(function()
         Template:Destroy()

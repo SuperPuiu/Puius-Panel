@@ -146,15 +146,19 @@ module.Team = function(_, Targets, Arguments)
 end
 
 module.Give = function(_, Targets, Arguments)
-  local Tool = Replicated:FindFirstChild(Arguments.Tool or "")
+  local Tool = Replicated:FindFirstChild(Arguments.Tool or "", true)
+  if not Tool or not Tool:IsA("Tool") then Tool = game:GetService("ServerStorage"):FindFirstChild(Arguments.Tool or "", true) end;
 
   if Tool then
+    if not Tool:IsA("Tool") then return end
+
     for i = 1, #Targets do
       local Player = NextPlayer(Targets, i)
 
       if Player then Tool:Clone().Parent = Player.Backpack end
     end
   end
+
 end
 
 module.Freeze = function(_, Targets)
