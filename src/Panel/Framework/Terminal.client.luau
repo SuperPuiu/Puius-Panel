@@ -89,9 +89,9 @@ UIS.InputBegan:Connect(function(Input)
     end
 
   elseif Input.KeyCode == Enum.KeyCode.Up then
-
+    -- TODO: Implement command history 
   elseif Input.KeyCode == Enum.KeyCode.Down then
-  
+    -- TODO: Implement command history
   elseif UIS:IsKeyDown(Enum.KeyCode[Combo[1]]) and UIS:IsKeyDown(Enum.KeyCode[Combo[2]]) then
     Terminal.Parent.Visible = not Terminal.Parent.Visible
   end

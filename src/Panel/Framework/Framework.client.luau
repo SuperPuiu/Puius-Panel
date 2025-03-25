@@ -1,4 +1,4 @@
--- Handles the graphical part of the panel.
+-- Handles the 'graphical' part of the panel.
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -16,7 +16,6 @@ local DraggableObject = require(script.Parent.DraggableUI)
 local Drag = DraggableObject.new(Panel.MainFrame)
 Drag:Enable()
 
-local CTRL_Down = false -- Used for multi selection
 local PlayersSelected = {}
 local PluginsName = Shared.GetPluginsName() -- {PluginName = {Name = Name}}
 local SectionDisplayed, CommandVisible = nil, nil
@@ -36,12 +35,8 @@ end
 -- within SettingsContainer, else it will throw an error.
 --]]
 local function HandleBoolSetting(Name)
-  if Panel:GetAttribute(Name) then
-    SettingsContainer[Name].State.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-  else
-    SettingsContainer[Name].State.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-  end
-
+  local NewColor = Panel:GetAttribute(Name) and Color3.fromRGB(170, 0, 0) or Color3.fromRGB(0, 170, 0)
+  SettingsContainer[Name].State.BackgroundColor3 = NewColor
   Panel:SetAttribute(Name, not Panel:GetAttribute(Name))
 end
 
@@ -71,14 +66,13 @@ local function RefreshPlayerList()
       end)
 
       Template.Interact.MouseButton1Up:Connect(function()
-        -- Holding down CTRL allows you to select multiple players at once. This aims to allow you do so.
-        if CTRL_Down then
+        -- Holding down CTRL allows you to select multiple players at once. This implements the functionality.
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
           if not table.find(PlayersSelected, Player) then
             table.insert(PlayersSelected, Player)
           else
-            for i, v in pairs(PlayersSelected) do
-              if v == Player then table.remove(PlayersSelected, i) end
-            end
+            local Index = table.find(PlayersSelected, Player)
+            if Index then table.remove(PlayersSelected, Index) end
           end
         else
           PlayersSelected = {[1] = Player}
@@ -100,8 +94,7 @@ local function RefreshPlayerList()
   end
 
   -- In the end, update the PlayerList CanvasSize based on information given by the UIListLayout
-  PlayerList.CanvasSize = UDim2.new(0, PlayerList.Container.UIListLayout.AbsoluteContentSize.X,
-  0, PlayerList.Container.UIListLayout.AbsoluteContentSize.Y)
+  PlayerList.CanvasSize = UDim2.fromOffset(PlayerList.Container.UIListLayout.AbsoluteContentSize.X, PlayerList.Container.UIListLayout.AbsoluteContentSize.Y)
 end
 
 --[[
@@ -110,18 +103,17 @@ end
 -- is true when Scaling should go to 0 and false when scaling should go to 1.
 --]]
 local function HandleVisibilityAnimation(Frame, In)
-  local Tween
+  local Tween = TweenService:Create(Frame.UIScale, In and Theme.WindowClose or Theme.WindowPopup, {Scale = In and 0 or 1})
+  Tween:Play()
 
-  if In then
-    Tween = TweenService:Create(Frame.UIScale, Theme.WindowClose, {Scale = 0})
-  else
-    Tween = TweenService:Create(Frame.UIScale, Theme.WindowPopup, {Scale = 1})
+  if not In then 
+    Frame.Visible = true
   end
 
-  Tween:Play()
-  if not In then Frame.Visible = true end
   Tween.Completed:Wait()
-  if In then Frame.Visible = false end
+  if In then 
+    Frame.Visible = false 
+  end
 end
 
 Panel.PanelButton.MouseButton1Up:Connect(function()
@@ -137,14 +129,6 @@ UIS.InputBegan:Connect(function(Input, Processed)
   if Input.KeyCode == Enum.KeyCode.Equals and not Processed then
     HandleVisibilityAnimation(Panel.MainFrame, Panel.MainFrame.Visible)
     if Panel.Terminal.Visible then HandleVisibilityAnimation(Panel.Terminal, true) end
-  elseif Input.KeyCode == Enum.KeyCode.LeftControl and not Processed then
-    CTRL_Down = true
-  end
-end)
-
-UIS.InputEnded:Connect(function(Input)
-  if Input.KeyCode == Enum.KeyCode.LeftControl then
-    CTRL_Down = false
   end
 end)
 
@@ -153,11 +137,7 @@ game:GetService("RunService").Stepped:Connect(function()
   for _, v in pairs(Panel.MainFrame.PlayerList.Container:GetChildren()) do
     if not v:IsA("Frame") or v.Name == "Template" then continue end
 
-    if not table.find(PlayersSelected, Players:FindFirstChild(v.Name)) then
-      v.BackgroundTransparency = 1
-    else
-      v.BackgroundTransparency = 0.8
-    end
+    v.BackgroundTransparency = table.find(PlayersSelected, Players:FindFirstChild(v.Name)) and 0.8 or 1
   end
 end)
 
@@ -181,6 +161,7 @@ end)
 DisplayFrame.Arguments.Execute.Interact.MouseButton1Up:Connect(function()
   local ArgumentsTable = {}
   
+  -- Fill out ArgumentsTable with the information provided
   for _, Argument in pairs(DisplayFrame.Arguments:GetChildren()) do
     if not Argument:IsA("Frame") then continue end
     if Argument.Name == "InputField" or Argument.Name == "Execute" or Argument.Name == "BoolField" then continue end
@@ -194,6 +175,7 @@ DisplayFrame.Arguments.Execute.Interact.MouseButton1Up:Connect(function()
     end
   end
 
+  -- Execute command
   Shared.RunCommand(CommandVisible, PlayersSelected, ArgumentsTable)
   PlayersSelected = {}
   RefreshPlayerList()
@@ -242,12 +224,8 @@ for Name, PluginTable in pairs(PluginsName) do
             
               FieldTemplate.TextButton.MouseButton1Up:Connect(function()
                 FieldTemplate.TextButton:SetAttribute("Status", not FieldTemplate.TextButton:GetAttribute("Status"))
-
-                if FieldTemplate.TextButton:GetAttribute("Status") == true then
-                  FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-                else
-                  FieldTemplate.TextButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-                end
+                local NewColor = FieldTemplate.TextButton:GetAttribute("Status") and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+                FieldTemplate.TextButton.BackgroundColor3 = NewColor
               end)
             end
           
