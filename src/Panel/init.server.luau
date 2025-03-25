@@ -6,8 +6,19 @@ local PluginsName = {}
 local Plugins     = {}
 local Logs        = {}
 
-local function GivePanel(Player)
+local function ContainsOnlyPlayers(PlayerTable)
+  for _, v in pairs(PlayerTable) do
+    if typeof(v) ~= "Instance" then return false end
+    if not v:IsA("Player") then return false end
+  end
+
+  return true
+end
+
+local function GivePanel(Player, Permissions)
   if Player.PlayerGui:FindFirstChild("PanelUI") then return end
+  if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return end
+
   local Panel = script.PanelUI:Clone()
   local ClientCommands = script.Plugins.Client:Clone()
   ClientCommands.Parent = Panel.Framework
@@ -48,10 +59,10 @@ local function Main()
     end
   end
 
-  script.PanelUI:SetAttribute("AlwaysOnTop", true)
+  script.PanelUI:SetAttribute("AlwaysOnTop", Settings.AlwaysOnTop)
 
   Event.OnServerInvoke = function(Player, Data)
-    if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to call the remote function." end
+    if not Permissions.Administrators[Player.UserId] and not Permissions.Moderators[Player.UserId] then return "User is not authorized to invoke the remote function." end
 
     if Data.Type == "RequestPlugins" then
       return PluginsName
@@ -66,7 +77,9 @@ local function Main()
         local Arguments = Data.Arguments
         
         if not Arguments then Arguments = {} end
-        if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data types given." end
+        if type(Command) ~= "string" or type(Targets) ~= "table" then return "Unknown data type(s) passed." end
+        if not ContainsOnlyPlayers(Targets) then return "Table doesn't contain only players." end
+
         return Plugins[Command](Player, Targets, Arguments) or `Executed {Command} command!`
       end)
 
@@ -84,15 +97,11 @@ local function Main()
   end
 
   game:GetService("Players").PlayerAdded:Connect(function(Player)
-    if Permissions.Administrators[Player.UserId] or Permissions.Moderators[Player.UserId] then
-      GivePanel(Player)
-    end
+    GivePanel(Player, Permissions)
   end)
 
   for _, Player in pairs(game:GetService("Players"):GetPlayers()) do
-    if Permissions.Administrators[Player.UserId] or Permissions.Moderators[Player.UserId] then
-      GivePanel(Player)
-    end
+    GivePanel(Player, Permissions)
   end
 end
 

@@ -2,15 +2,6 @@ local module = {}
 local Settings = require(script.Parent.Parent.Parent.Settings)
 local Replicated = game:GetService("ReplicatedStorage")
 
-local function NextPlayer(List, Index)
-  local NewItem = List[Index]
-
-  if typeof(NewItem) ~= "Instance" then return end
-  if not NewItem:IsA("Player") then return end
-
-  return NewItem
-end
-
 -- Metadata
 module.Name = "Vanilla Commands" -- This gives the panel button a custom name. Not adding it will result in the usage of the module's name.
 module.Descriptions = {
@@ -54,10 +45,8 @@ module.RequireExArguments = {
 -- Commands
 
 module.Kick = function(_, Targets, Arguments)
-  for i = 1, #Targets do
-    local Player = NextPlayer(Targets, i)
-
-    if Player then Player:Kick(Arguments.Message or "You have been kicked by a moderator.") end
+  for _, Player in pairs(Targets) do
+    Player:Kick(Arguments.Message or "You have been kicked by a moderator.")
   end
 end
 
@@ -66,7 +55,7 @@ module.Ban = function(Executor, Targets, Arguments)
   if game.PrivateServerId ~= nil and game.PrivateServerOwnerId ~= 0 then return "Unable to run BAN within a private server." end
   if not Settings.Administrators[Executor.UserId] then return "You must be an administrator to execute this command." end
 
-  local Target = NextPlayer(Targets, 1)
+  local Target = Targets[1];
   if not Target then return "Invalid target passed to BAN command." end
 
   local BanConfiguration = {
@@ -76,7 +65,7 @@ module.Ban = function(Executor, Targets, Arguments)
     PrivateReason = Arguments.PrivateReason or "",
     ExcludeAltAccounts = Arguments.ExcludeAltAccounts or true,
     ApplyToUniverse = true
-  }
+  };
 
   game:GetService("Players"):BanAsync(BanConfiguration)
   Target:Kick("You have been banned.")
@@ -101,34 +90,27 @@ end
 module.RemoveTool = function(_, Targets, Arguments)
   if not Arguments then return end
 
-  for i = 1, #Targets do
-    local Player = NextPlayer(Targets, i)
-    if not Player then continue end
-
-    if Player.Backpack:FindFirstChild(Arguments.Tool or "") then Player.Backpack[Arguments.Tool]:Destroy() end
+  for _, Player in pairs(Targets) do
+    if Player.Backpack:FindFirstChild(Arguments.Tool or "") then 
+      Player.Backpack[Arguments.Tool]:Destroy() 
+    end
   end
 end
 
 module.Respawn = function(_, Targets)
-  for i = 1, #Targets do
-    local Player = NextPlayer(Targets, i)
-
-    if Player then Player:LoadCharacter() end
+  for _, Player in pairs(Targets) do
+    Player:LoadCharacter()
   end
 end
 
 module.GoTo = function(Executor, Targets)
   local Player = Targets[1]
-  if typeof(Player) ~= "Instance" then return "Target is not an instance." end
-  if Player:IsA("Player") ~= "Player" then return end
-
   Executor.Character:PivotTo(Player.Character:GetPivot() * CFrame.new(0, 0, -3))
 end
 
 module.Bring = function(Executor, Targets)
-  for i = 1, #Targets do
-    local Player = NextPlayer(Targets, i)
-    if Player then Player.Character:PivotTo(Executor.Character:GetPivot() * CFrame.new(0, 0, -3)) end
+  for _, Player in pairs(Targets) do
+    Player.Character:PivotTo(Executor.Character:GetPivot() * CFrame.new(0, 0, -3))
   end
 end
 
@@ -139,9 +121,8 @@ module.Team = function(_, Targets, Arguments)
 
   if not Team then return "Argument 1 doesn't exist for TEAM command." end
 
-  for i = 1, #Targets do
-    local Player = NextPlayer(Targets, i)
-    if Player then Player.Team = Team end
+  for _, Player in pairs(Targets) do
+    Player.Team = Team
   end
 end
 
@@ -152,19 +133,14 @@ module.Give = function(_, Targets, Arguments)
   if Tool then
     if not Tool:IsA("Tool") then return end
 
-    for i = 1, #Targets do
-      local Player = NextPlayer(Targets, i)
-
-      if Player then Tool:Clone().Parent = Player.Backpack end
+    for _, Player in pairs(Targets) do
+      Tool:Clone().Parent = Player.Backpack
     end
   end
-
 end
 
 module.Freeze = function(_, Targets)
   for _, Player in pairs(Targets) do
-    if typeof(Player) ~= "Instance" then continue end
-    if not Player:IsA("Player") then continue end
     if not Player.Character then continue end
     if not Player.Character:FindFirstChild("HumanoidRootPart") then continue end
 
