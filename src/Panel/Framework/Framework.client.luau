@@ -86,8 +86,13 @@ local function RefreshPlayerList()
 
     Template.Visible = true
   end
+  
+  for _, v in pairs(PlayerList.Container:GetChildren()) do
+    if not game.Players:FindFirstChild(v.Name) and v.Name ~= "Template" then
+      v:Destroy();
+    end;
+  end;
 
-  -- Considering that there may be players which aren't in a team, they should appear on top of other teams.
   for _, Player in pairs(Players:GetPlayers()) do
     Order = Order + 1
     CreatePlayerButton(Player)
