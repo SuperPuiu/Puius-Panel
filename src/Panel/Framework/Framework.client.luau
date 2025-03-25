@@ -88,7 +88,7 @@ local function RefreshPlayerList()
   end
   
   for _, v in pairs(PlayerList.Container:GetChildren()) do
-    if not game.Players:FindFirstChild(v.Name) and v.Name ~= "Template" then
+    if not game.Players:FindFirstChild(v.Name) and v.Name ~= "Template" and v:IsA("Frame") then
       v:Destroy();
     end;
   end;
